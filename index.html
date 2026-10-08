@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Works out how much E85 and pump gas to add, counting the fuel already in your tank, to hit E40 or any target blend. Works offline on iPhone.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="E40 Blend">
+<meta name="theme-color" content="#eceff2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1114" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<meta name="e40-pwa" content="1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="E40 Blend Calculator">
+<meta property="og:description" content="Works out how much E85 and pump gas to add, counting the fuel already in your tank, to hit E40 or any target blend. Works offline on iPhone.">
+<meta property="og:url" content="https://dosmiao.github.io/e40-blend/">
+<meta property="og:image" content="https://dosmiao.github.io/e40-blend/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://dosmiao.github.io/e40-blend/">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>E40 Blend Calculator</title>
+<style>
+/* Layout: phone-first stack of input groups (target → tank → fuels → method) under a sticky tab bar that carries a live pump readout; on wide screens the pump display docks in a right-hand column. */
+:root {
+  --ground: #eceff2;
+  --bar: rgba(236, 239, 242, 0.88);
+  --panel: #ffffff;
+  --field: #f3f5f7;
+  --track: #dfe3e8;
+  --thumb: #ffffff;
+  --hover: rgba(21, 25, 30, 0.05);
+  --press: rgba(21, 25, 30, 0.1);
+  --ink: #15191e;
+  --ink-2: #56606a;
+  --ink-3: #848d97;
+  --rule: #d9dee3;
+  --rule-soft: #eceff2;
+  --shade: rgba(21, 25, 30, 0.1);
+  --focus: #2f6bd6;
+  --focus-ring: rgba(47, 107, 214, 0.25);
+  --gas: #2f6bd6;
+  --gas-ink: #ffffff;
+  --eth: #e8ad00;
+  --eth-ink: #261c00;
+  --eth-soft: #fbf1cf;
+  --res: #9ba5ae;
+  --res-2: #c4cbd1;
+  --ok: #17703d;
+  --ok-soft: #dcf1e4;
+  --ok-fill: #34c759;
+  --ok-strong: #1f8a4c;
+  --on-strong: #ffffff;
+  --warn: #9a4f00;
+  --warn-soft: #fcebd6;
+  --bad: #b02a26;
+  --bad-soft: #fadcdb;
+  --bad-ring: rgba(176, 42, 38, 0.2);
+  --sel: #15191e;
+  --sel-ink: #ffffff;
+  --knob: #ffffff;
+  --bezel: #23282e;
+  --bezel-edge: #23282e;
+  --bezel-ink: #e3e7eb;
+  --bezel-ink-2: #9aa3ac;
+  --lcd: #cbd5bc;
+  --lcd-ink: #10150f;
+  --lcd-ink-2: #4c5845;
+  --lcd-rule: #a6b297;
+  --lcd-edge: rgba(0, 0, 0, 0.18);
+  --lcd-shadow: rgba(0, 0, 0, 0.16);
+  --pill-ok: #57d68f;
+  --pill-warn: #ffb54f;
+  --pill-bad: #ff8079;
+  --pill-ink: #0c110d;
+  --f-display: "DIN Condensed", "Bahnschrift", "Roboto Condensed", "sans-serif-condensed", "Arial Narrow", sans-serif;
+  --f-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, sans-serif;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1114;
+    --bar: rgba(14, 17, 20, 0.88);
+    --panel: #171b20;
+    --field: #1f242a;
+    --track: #262c33;
+    --thumb: #3b434c;
+    --hover: rgba(255, 255, 255, 0.05);
+    --press: rgba(255, 255, 255, 0.1);
+    --ink: #e8ecef;
+    --ink-2: #a3adb6;
+    --ink-3: #737e88;
+    --rule: #2c333a;
+    --rule-soft: #21272d;
+    --shade: rgba(0, 0, 0, 0.4);
+    --focus: #6a9cf2;
+    --focus-ring: rgba(106, 156, 242, 0.3);
+    --gas: #5b8fee;
+    --gas-ink: #06112a;
+    --eth: #f0bd2c;
+    --eth-ink: #221900;
+    --eth-soft: #362d0d;
+    --res: #69737d;
+    --res-2: #4a535b;
+    --ok: #5fd08f;
+    --ok-soft: #13301f;
+    --ok-fill: #30d158;
+    --ok-strong: #2fae63;
+    --on-strong: #04150b;
+    --warn: #f3a952;
+    --warn-soft: #3a2911;
+    --bad: #ff7b74;
+    --bad-soft: #3d1816;
+    --bad-ring: rgba(255, 123, 116, 0.25);
+    --sel: #e8ecef;
+    --sel-ink: #0e1114;
+    --knob: #f4f6f8;
+    --bezel: #1d2227;
+    --bezel-edge: #353d46;
+    --bezel-ink: #e3e7eb;
+    --bezel-ink-2: #8e98a2;
+    --lcd: #a9b696;
+    --lcd-ink: #0b0f0a;
+    --lcd-ink-2: #3f4a38;
+    --lcd-rule: #8a977a;
+    --lcd-edge: rgba(0, 0, 0, 0.3);
+    --lcd-shadow: rgba(0, 0, 0, 0.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e1114;
+  --bar: rgba(14, 17, 20, 0.88);
+  --panel: #171b20;
+  --field: #1f242a;
+  --track: #262c33;
+  --thumb: #3b434c;
+  --hover: rgba(255, 255, 255, 0.05);
+  --press: rgba(255, 255, 255, 0.1);
+  --ink: #e8ecef;
+  --ink-2: #a3adb6;
+  --ink-3: #737e88;
+  --rule: #2c333a;
+  --rule-soft: #21272d;
+  --shade: rgba(0, 0, 0, 0.4);
+  --focus: #6a9cf2;
+  --focus-ring: rgba(106, 156, 242, 0.3);
+  --gas: #5b8fee;
+  --gas-ink: #06112a;
+  --eth: #f0bd2c;
+  --eth-ink: #221900;
+  --eth-soft: #362d0d;
+  --res: #69737d;
+  --res-2: #4a535b;
+  --ok: #5fd08f;
+  --ok-soft: #13301f;
+  --ok-fill: #30d158;
+  --ok-strong: #2fae63;
+  --on-strong: #04150b;
+  --warn: #f3a952;
+  --warn-soft: #3a2911;
+  --bad: #ff7b74;
+  --bad-soft: #3d1816;
+  --bad-ring: rgba(255, 123, 116, 0.25);
+  --sel: #e8ecef;
+  --sel-ink: #0e1114;
+  --knob: #f4f6f8;
+  --bezel: #1d2227;
+  --bezel-edge: #353d46;
+  --bezel-ink: #e3e7eb;
+  --bezel-ink-2: #8e98a2;
+  --lcd: #a9b696;
+  --lcd-ink: #0b0f0a;
+  --lcd-ink-2: #3f4a38;
+  --lcd-rule: #8a977a;
+  --lcd-edge: rgba(0, 0, 0, 0.3);
+  --lcd-shadow: rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.app { max-width: 1100px; margin-inline: auto; padding-inline: var(--gutter-l) var(--gutter-r); padding-block: 14px 48px; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; text-wrap: balance; }
+.decal {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 27px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  background: var(--eth);
+  color: var(--eth-ink);
+  padding: 7px 9px 3px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.share-btn {
+  appearance: none; flex: none; display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 14px 0 11px; border-radius: 999px; border: 1px solid var(--rule);
+  background: var(--panel); color: var(--ink); font-size: 14px; font-weight: 650; touch-action: manipulation;
+}
+.share-btn:hover { background: var(--hover); }
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 50;
+  transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+  max-width: calc(100vw - 32px); padding: 10px 16px; border-radius: 14px; text-align: center; overflow-wrap: anywhere;
+  background: var(--bezel); color: var(--bezel-ink); font-size: 14px; font-weight: 600; box-shadow: 0 6px 20px var(--shade);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.lede { margin: 8px 0 10px; color: var(--ink-2); font-size: 14px; max-width: 44em; text-wrap: pretty; }
+
+.seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; padding: 3px; background: var(--track); border-radius: 11px; }
+.seg > button {
+  appearance: none; border: 0; background: transparent; color: var(--ink-2);
+  font-size: 14px; font-weight: 600; min-height: 34px; padding: 6px 12px; border-radius: 8px;
+  white-space: nowrap; touch-action: manipulation;
+}
+.seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] {
+  background: var(--thumb); color: var(--ink); box-shadow: 0 1px 3px var(--shade);
+}
+.seg.wide { display: grid; width: 100%; }
+.seg.wide > button { white-space: normal; line-height: 1.25; text-wrap: balance; }
+
+/* ---------- sticky bar ---------- */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+  margin-inline: calc(-1 * var(--gutter-l)) calc(-1 * var(--gutter-r));
+  padding: 8px var(--gutter-r) 10px var(--gutter-l);
+  background: var(--ground);
+  display: grid; gap: 8px;
+  transition: box-shadow 0.2s;
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .bar { background: var(--bar); -webkit-backdrop-filter: saturate(1.6) blur(14px); backdrop-filter: saturate(1.6) blur(14px); }
+}
+.bar.scrolled { box-shadow: 0 1px 0 var(--rule); }
+.tabs { display: grid; width: 100%; }
+.mini {
+  appearance: none; border: 0; width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 44px; padding: 6px 8px 6px 12px; border-radius: 12px;
+  background: var(--bezel); color: var(--bezel-ink); text-align: left;
+  box-shadow: 0 0 0 1px var(--bezel-edge);
+}
+.mini-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; font-family: var(--f-display); font-size: 21px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mini-body .num-t { padding-top: 3px; }
+.mini-body .sep { color: var(--bezel-ink-2); padding-top: 2px; }
+.mini-body .msg { font-family: var(--f-body); font-size: 14px; font-weight: 600; }
+.mini .badge { font-size: 14px; padding: 4px 5px 2px; }
+.app:not([data-tab="calc"]) .mini { display: none; }
+
+/* ---------- groups & fields ---------- */
+.view { padding-top: 6px; }
+.calc-grid { display: grid; gap: 14px; }
+.col-inputs { display: grid; gap: 14px; min-width: 0; }
+.group { background: var(--panel); border-radius: 16px; padding: 16px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.group h2 { margin: 0; font-size: 12px; font-weight: 700; color: var(--ink-2); letter-spacing: 0.09em; text-transform: uppercase; }
+.group-head.with-ctl { align-items: center; }
+.seg-sm > button { min-height: 30px; padding: 4px 13px; font-size: 13px; }
+.fold-body a { color: var(--focus); font-weight: 650; }
+.group-head .aside { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.desc { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 46em; }
+
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 136px), 1fr)); gap: 14px 12px; }
+.field { display: grid; gap: 7px; min-width: 0; align-content: start; }
+.lbl { font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+.lbl-u { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: -3px; }
+.lbl-u::before { content: "("; }
+.lbl-u::after { content: ")"; }
+.hint { margin: 0; font-size: 12.5px; color: var(--ink-3); line-height: 1.45; }
+.err { margin: 0; font-size: 12.5px; color: var(--bad); font-weight: 600; line-height: 1.4; }
+.err:empty { display: none; }
+
+.stepper {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px;
+  height: 50px; border-radius: 12px; background: var(--field);
+  border: 1px solid var(--rule); overflow: hidden;
+}
+.stepper:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px var(--focus-ring); }
+.stepper.bad { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-ring); }
+.step {
+  appearance: none; border: 0; background: transparent; color: var(--ink);
+  font-size: 22px; font-weight: 500; line-height: 1; padding: 0;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.step:hover { background: var(--hover); }
+.step:active { background: var(--press); }
+.num { display: flex; align-items: center; justify-content: center; gap: 1px; min-width: 0; cursor: text; border-inline: 1px solid var(--rule); padding-inline: 3px; }
+.num input {
+  appearance: none; border: 0; background: transparent; outline: none; padding: 0; margin: 0;
+  font-size: 20px; font-weight: 650; text-align: center; font-variant-numeric: tabular-nums;
+  width: 3ch; max-width: 100%; min-width: 0; color: var(--ink); caret-color: var(--focus);
+}
+.num .pre { font-size: 20px; font-weight: 650; color: var(--ink-3); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  appearance: none; display: inline-flex; align-items: center; gap: 7px;
+  min-height: 40px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--rule); background: var(--field); color: var(--ink);
+  font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; touch-action: manipulation;
+}
+.chip:hover { background: var(--hover); }
+.chip[aria-pressed="true"] { background: var(--sel); border-color: var(--sel); color: var(--sel-ink); }
+.chip.sm { min-height: 34px; padding: 5px 12px; font-size: 14px; }
+.sw { width: 10px; height: 10px; border-radius: 3px; flex: none; display: inline-block; }
+.sw.low { background: var(--gas); }
+.sw.high { background: var(--eth); }
+
+.gauge { display: grid; gap: 3px; }
+.gauge-bar { height: 12px; border-radius: 6px; background: var(--field); border: 1px solid var(--rule); overflow: hidden; }
+.gauge-fill { height: 100%; width: 0; background: repeating-linear-gradient(135deg, var(--res) 0 5px, var(--res-2) 5px 10px); transition: width 0.25s; }
+.gauge-ticks { position: relative; height: 18px; font-family: var(--f-display); font-size: 15px; color: var(--ink-3); }
+.gauge-ticks span { position: absolute; top: 2px; transform: translateX(-50%); line-height: 1; }
+.gauge-ticks span:first-child { transform: none; }
+.gauge-ticks span:last-child { transform: translateX(-100%); }
+
+.range { width: 100%; margin: 0; height: 28px; accent-color: var(--eth); }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 14px; border-top: 1px solid var(--rule); cursor: pointer; }
+.switch-row .txt { display: grid; gap: 2px; }
+.switch {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 0;
+  width: 51px; height: 31px; border-radius: 16px; background: var(--track);
+  position: relative; transition: background 0.2s; cursor: pointer;
+}
+.switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px;
+  border-radius: 50%; background: var(--knob); box-shadow: 0 2px 4px var(--shade); transition: transform 0.2s;
+}
+.switch:checked { background: var(--ok-fill); }
+.switch:checked::after { transform: translateX(20px); }
+
+/* ---------- result: pump display ---------- */
+.col-result { display: grid; gap: 12px; min-width: 0; align-content: start; scroll-margin-top: 120px; }
+.pump {
+  background: var(--bezel); color: var(--bezel-ink); border-radius: 20px; padding: 12px;
+  display: grid; gap: 10px; box-shadow: 0 0 0 1px var(--bezel-edge), 0 12px 30px var(--shade);
+}
+.pump-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 4px 0; }
+.pump-title { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bezel-ink-2); }
+.pill {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  background: var(--pill-ok); color: var(--pill-ink);
+}
+.pill[data-tone="warn"] { background: var(--pill-warn); }
+.pill[data-tone="bad"] { background: var(--pill-bad); }
+.lcd {
+  background: var(--lcd); color: var(--lcd-ink); border-radius: 12px; padding: 4px 14px;
+  box-shadow: inset 0 2px 6px var(--lcd-shadow), inset 0 0 0 1px var(--lcd-edge);
+  display: grid;
+}
+.lcd-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 12px 0 10px; }
+.lcd-row + .lcd-row, .lcd-now + .lcd-row { border-top: 1px dashed var(--lcd-rule); }
+.lcd-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; min-width: 0; font-size: 13px; font-weight: 600; color: var(--lcd-ink-2); }
+.lcd-step { color: var(--lcd-ink); font-size: 14px; font-weight: 700; }
+.lcd-cap { flex-basis: 100%; font-size: 12.5px; }
+.lcd-num { font-family: var(--f-display); font-weight: 700; font-size: 48px; line-height: 0.9; letter-spacing: 0.01em; text-align: right; font-variant-numeric: tabular-nums; padding-top: 7px; white-space: nowrap; }
+.lcd-unit { font-size: 17px; margin-left: 4px; letter-spacing: 0.06em; color: var(--lcd-ink-2); }
+.lcd-approx { font-family: var(--f-body); font-size: 22px; font-weight: 600; margin-right: 4px; color: var(--lcd-ink-2); vertical-align: 0.35em; }
+.lcd-now { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 0 8px; font-size: 13px; font-weight: 600; color: var(--lcd-ink-2); }
+.lcd-now b { font-family: var(--f-display); font-size: 24px; font-weight: 700; color: var(--lcd-ink); letter-spacing: 0.01em; }
+.lcd-now small { font-family: var(--f-display); font-size: 13px; margin-left: 3px; }
+.lcd-blank { padding: 20px 4px; text-align: center; font-weight: 650; color: var(--lcd-ink); line-height: 1.5; }
+.badge {
+  display: inline-flex; align-items: center; font-family: var(--f-display); font-weight: 700;
+  font-size: 17px; line-height: 1; padding: 5px 7px 3px; border-radius: 6px; letter-spacing: 0.02em; white-space: nowrap;
+}
+.badge.low { background: var(--gas); color: var(--gas-ink); }
+.badge.high { background: var(--eth); color: var(--eth-ink); }
+.pump-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 2px 4px; }
+.stat { display: grid; gap: 3px; min-width: 0; }
+.stat .k { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--bezel-ink-2); }
+.stat .v { font-family: var(--f-display); font-size: 29px; line-height: 1; padding-top: 3px; color: var(--bezel-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 15px; color: var(--bezel-ink-2); margin-left: 3px; letter-spacing: 0.04em; }
+
+.panel { background: var(--panel); border-radius: 16px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.tank-wrap { display: grid; gap: 6px; }
+.tank { position: relative; display: flex; height: 26px; border-radius: 7px; background: var(--field); border: 1px solid var(--rule); overflow: hidden; }
+.tk { height: 100%; flex: none; transition: width 0.25s; }
+.tk + .tk { box-shadow: -1px 0 0 var(--panel); }
+.tk.res { background: repeating-linear-gradient(135deg, var(--res) 0 5px, var(--res-2) 5px 10px); }
+.tk.high { background: var(--eth); }
+.tk.low { background: var(--gas); }
+.tk-over { position: absolute; top: 0; bottom: 0; right: 0; background: repeating-linear-gradient(45deg, var(--bad) 0 4px, transparent 4px 8px); }
+.tk-cap { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); }
+.tank-scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink-2); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend b { color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+.tk-key { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.tk-key.res { background: repeating-linear-gradient(135deg, var(--res) 0 3px, var(--res-2) 3px 6px); }
+.tk-key.high { background: var(--eth); }
+.tk-key.low { background: var(--gas); }
+.tk-key.empty { background: var(--field); box-shadow: inset 0 0 0 1px var(--rule); }
+.facts { margin: 0; display: grid; }
+.facts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-top: 1px solid var(--rule); }
+.facts dt { color: var(--ink-2); font-size: 14px; }
+.facts dd { margin: 0; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+.notes { display: grid; gap: 8px; }
+.notes:empty { display: none; }
+.note { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; line-height: 1.55; background: var(--field); color: var(--ink); }
+.note b { font-weight: 700; }
+.note[data-tone="ok"] { background: var(--ok-soft); }
+.note[data-tone="ok"] b { color: var(--ok); }
+.note[data-tone="warn"] { background: var(--warn-soft); }
+.note[data-tone="warn"] b { color: var(--warn); }
+.note[data-tone="bad"] { background: var(--bad-soft); }
+.note[data-tone="bad"] b { color: var(--bad); }
+
+/* ---------- ratio table ---------- */
+.key { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.key li { display: inline-flex; align-items: center; gap: 6px; }
+.key i { width: 20px; height: 14px; border-radius: 4px; display: inline-block; }
+.k-dbl { background: var(--ok-strong); box-shadow: inset 0 0 0 2px var(--gas); }
+.k-col { background: var(--ok-soft); }
+.k-row { box-shadow: inset 0 0 0 2px var(--gas); }
+.k-cur { background: var(--eth-soft); box-shadow: inset 0 2px 0 var(--eth); }
+.k-below { background: var(--field); }
+.tsum { margin: 0; font-size: 14px; line-height: 1.6; }
+.tsum b { font-variant-numeric: tabular-nums; }
+.tbl-wrap {
+  position: relative; overflow: auto; max-height: min(68vh, 620px);
+  border: 1px solid var(--rule); border-radius: 12px; background: var(--panel);
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+}
+.qt { border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.qt th, .qt td { padding: 0 8px; height: 32px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--rule-soft); }
+.qt td { min-width: 56px; }
+.qt thead th { position: sticky; top: 0; z-index: 2; background: var(--panel); height: auto; padding: 8px 8px 6px; vertical-align: bottom; border-bottom: 1px solid var(--rule); }
+.qt thead th .ce { display: block; font-family: var(--f-display); font-size: 18px; line-height: 1; padding-top: 3px; color: var(--ink); }
+.qt thead th small { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; color: var(--ink-3); }
+.qt thead th.cur { background: var(--eth); }
+.qt thead th.cur .ce, .qt thead th.cur small { color: var(--eth-ink); }
+.qt tbody th { position: sticky; left: 0; z-index: 1; background: var(--panel); text-align: left; font-weight: 600; color: var(--ink-2); border-right: 1px solid var(--rule); }
+.qt thead th.corner { left: 0; z-index: 3; text-align: left; border-right: 1px solid var(--rule); }
+.qt thead th.corner span { display: block; font-size: 12px; font-weight: 650; color: var(--ink-2); }
+.qt td.below { color: var(--ink-3); }
+.qt td.cur { background: var(--eth-soft); }
+.qt td.co { background: var(--ok-soft); color: var(--ok); font-weight: 700; }
+.qt td.ro { box-shadow: inset 0 0 0 2px var(--gas); font-weight: 700; }
+.qt td.dbl { background: var(--ok-strong); color: var(--on-strong); font-weight: 800; box-shadow: inset 0 0 0 2px var(--gas); }
+.howto { display: grid; gap: 6px; font-size: 13.5px; color: var(--ink-2); }
+.howto p { margin: 0; }
+.howto b { color: var(--ink); }
+
+/* ---------- prices ---------- */
+.price-grid { display: grid; gap: 14px; }
+.prices { display: grid; }
+.price-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rule); }
+.price-row:first-child { border-top: 0; padding-top: 0; }
+.pname { color: var(--ink-2); font-size: 13.5px; }
+.money { display: inline-flex; align-items: center; gap: 3px; height: 44px; padding: 0 12px; border-radius: 10px; background: var(--field); border: 1px solid var(--rule); cursor: text; }
+.money:focus-within { border-color: var(--focus); box-shadow: 0 0 0 3px var(--focus-ring); }
+.money input { width: 4.4ch; border: 0; background: transparent; outline: none; padding: 0; font-size: 18px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+.money span { color: var(--ink-3); font-size: 14px; }
+.opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.opt { display: grid; gap: 6px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--rule); }
+.opt.best { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
+.opt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.opt-fuels { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--ink-3); }
+.opt-cost { font-family: var(--f-display); font-size: 28px; line-height: 1; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.opt-sub { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--field); color: var(--ink-2); }
+.tag.best { background: var(--ok-soft); color: var(--ok); }
+.opt-empty { color: var(--ink-2); font-size: 14px; padding: 14px; border-radius: 12px; background: var(--field); }
+.mpg-row { display: grid; grid-template-columns: auto auto; justify-content: space-between; align-items: center; gap: 8px 10px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.mpg-lbl { grid-column: 1 / -1; font-size: 14px; font-weight: 600; }
+.sel {
+  appearance: none; -webkit-appearance: none; height: 44px; padding: 0 32px 0 12px; border-radius: 10px;
+  border: 1px solid var(--rule); color: var(--ink); font: inherit; font-size: 16px; font-weight: 650;
+  background-color: var(--field);
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: right 18px top 20px, right 13px top 20px;
+  background-size: 5px 5px; background-repeat: no-repeat;
+}
+.sel:focus-visible { border-color: var(--focus); box-shadow: 0 0 0 3px var(--focus-ring); outline: none; }
+.mpg-out { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--field); font-size: 14px; line-height: 1.55; }
+.mpg-out b { font-family: var(--f-display); font-size: 22px; font-weight: 700; letter-spacing: 0.01em; vertical-align: -2px; }
+
+/* ---------- footer ---------- */
+.foot { margin-top: 22px; display: grid; gap: 10px; }
+.fold { background: var(--panel); border-radius: 14px; }
+.fold > summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 650; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-radius: 14px; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); transition: transform 0.2s; margin-right: 4px; flex: none; }
+.fold[open] > summary::after { transform: rotate(-135deg); }
+.fold-body { padding: 0 16px 16px; display: grid; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.fold-body p, .fold-body ul { margin: 0; }
+.fold-body ul { padding-left: 1.2em; display: grid; gap: 4px; }
+.formula { padding: 10px 12px; background: var(--field); border-radius: 10px; color: var(--ink); font-variant-numeric: tabular-nums; overflow-x: auto; line-height: 1.7; }
+.formula span { color: var(--ink-2); }
+.foot-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 2px; font-size: 14px; color: var(--ink-2); }
+.linkbtn { appearance: none; border: 0; background: none; padding: 4px 0; color: var(--focus); font-weight: 650; font-size: 14px; }
+.linkbtn.danger { color: var(--bad); }
+.fine { margin: 0; font-size: 12px; color: var(--ink-3); }
+
+@media (min-width: 900px) {
+  .calc-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 410px); align-items: start; gap: 18px; }
+  .col-result { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 70px); }
+  .mini { display: none; }
+  .price-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+}
+@media (max-width: 400px) {
+  .stepper { grid-template-columns: 40px minmax(0, 1fr) 40px; }
+  .group { padding: 16px 14px; }
+}
+@media (max-width: 360px) {
+  .lcd-num { font-size: 40px; }
+  .stat .v { font-size: 25px; }
+  .brand { font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app" lang="en" data-tab="calc">
+  <header class="top">
+    <h1 class="brand"><span class="decal" id="brandE">E40</span><span>Blend Calculator</span></h1>
+    <button type="button" class="share-btn" id="shareBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M8.5 10H6.5a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-2"/></svg>Share</button>
+  </header>
+  <p class="lede">Enter what's left in your tank and the two fuels you're adding. You get how much of each to pump to hit your target ethanol blend.</p>
+
+  <div class="bar" id="bar">
+    <div class="seg tabs" role="tablist" id="tabsList" aria-label="Sections">
+      <button type="button" role="tab" id="tab-calc" aria-controls="view-calc" aria-selected="true">Calculator</button>
+      <button type="button" role="tab" id="tab-table" aria-controls="view-table" aria-selected="false" tabindex="-1">Ratio table</button>
+      <button type="button" role="tab" id="tab-price" aria-controls="view-price" aria-selected="false" tabindex="-1">Prices</button>
+    </div>
+    <button type="button" class="mini" id="mini" aria-label="Jump to the result">
+      <span class="mini-body" id="miniBody"></span>
+      <span class="pill" id="miniPill" data-tone="ok">✓</span>
+    </button>
+  </div>
+
+  <main id="main">
+    <!-- ================= calculator ================= -->
+    <section id="view-calc" class="view" role="tabpanel" aria-labelledby="tab-calc">
+      <div class="calc-grid">
+        <div class="col-inputs">
+
+          <section class="group" aria-labelledby="g-target">
+            <div class="group-head with-ctl"><h2 id="g-target">Target &amp; tank</h2>
+              <div class="seg seg-sm" role="group" aria-label="Volume unit">
+                <button type="button" id="unit-gal" data-unit="gal" aria-pressed="true">gal</button>
+                <button type="button" id="unit-L" data-unit="L" aria-pressed="false">L</button>
+              </div>
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="lbl" id="lb-target">Target ethanol</span>
+                <div class="stepper" data-key="target">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-target"><span class="pre">E</span><input id="in-target" class="numin" data-key="target" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-target"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="target"></p>
+                <p class="hint">Defaults to E40. Any target works.</p>
+              </div>
+              <div class="field">
+                <span class="lbl" id="lb-cap">Tank capacity <span class="lbl-u" data-u>gal</span></span>
+                <div class="stepper" data-key="cap">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-cap"><input id="in-cap" class="numin" data-key="cap" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-cap"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="cap"></p>
+                <p class="hint">What the tank holds when full</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="group" aria-labelledby="g-res">
+            <div class="group-head"><h2 id="g-res">In the tank now</h2><span class="aside" id="resPct"></span></div>
+            <div class="gauge" aria-hidden="true">
+              <div class="gauge-bar"><div class="gauge-fill" id="gaugeFill"></div></div>
+              <div class="gauge-ticks"><span style="left:0">E</span><span style="left:25%">¼</span><span style="left:50%">½</span><span style="left:75%">¾</span><span style="left:100%">F</span></div>
+            </div>
+            <div class="chips" role="group" aria-label="Quick fill from your fuel gauge">
+              <button type="button" class="chip sm" data-frac="0" aria-label="Empty">Empty</button>
+              <button type="button" class="chip sm" data-frac="0.125" aria-label="One eighth tank">⅛</button>
+              <button type="button" class="chip sm" data-frac="0.25" aria-label="Quarter tank">¼</button>
+              <button type="button" class="chip sm" data-frac="0.375" aria-label="Three eighths tank">⅜</button>
+              <button type="button" class="chip sm" data-frac="0.5" aria-label="Half tank">½</button>
+              <button type="button" class="chip sm" data-frac="0.75" aria-label="Three quarters tank">¾</button>
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="lbl" id="lb-resV">Fuel left <span class="lbl-u" data-u>gal</span></span>
+                <div class="stepper" data-key="resV">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-resV"><input id="in-resV" class="numin" data-key="resV" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-resV"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="resV"></p>
+              </div>
+              <div class="field">
+                <span class="lbl" id="lb-resE">Its ethanol content</span>
+                <div class="stepper" data-key="resE">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-resE"><span class="pre">E</span><input id="in-resE" class="numin" data-key="resE" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-resE"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="resE"></p>
+                <p class="hint">From your flex-fuel sensor or your last blend</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="group" aria-labelledby="g-fuel">
+            <h2 id="g-fuel">Fuels to add</h2>
+            <div class="field">
+              <span class="lbl" id="lb-low"><i class="sw low"></i>Low-ethanol fuel (pump gas)</span>
+              <div class="chips" role="group" aria-labelledby="lb-low">
+                <button type="button" class="chip" data-low="0">E0</button>
+                <button type="button" class="chip" data-low="10">E10</button>
+                <button type="button" class="chip" data-low="15">E15</button>
+                <button type="button" class="chip" data-low="30">E30</button>
+                <button type="button" class="chip" data-low="custom">Other</button>
+              </div>
+              <div class="field" id="lowCustomWrap" hidden>
+                <span class="lbl" id="lb-lowE">Low-ethanol fuel content</span>
+                <div class="stepper" data-key="lowE">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-lowE"><span class="pre">E</span><input id="in-lowE" class="numin" data-key="lowE" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-lowE"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="lowE"></p>
+              </div>
+            </div>
+            <div class="field">
+              <span class="lbl"><i class="sw high"></i><span id="lb-highE">High-ethanol fuel (E85), tested</span></span>
+              <div class="stepper" data-key="highE">
+                <button type="button" class="step" data-dir="-1">−</button>
+                <label class="num" for="in-highE"><span class="pre">E</span><input id="in-highE" class="numin" data-key="highE" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-highE"></label>
+                <button type="button" class="step" data-dir="1">+</button>
+              </div>
+              <input type="range" class="range" id="in-highRange" min="50" max="100" step="1" aria-label="High-ethanol fuel content slider">
+              <p class="err" data-err="highE"></p>
+              <p class="hint">US E85 really contains 51–83% ethanol, depending on the season. Test it if you can.</p>
+            </div>
+            <label class="switch-row" for="in-uncertain">
+              <span class="txt"><span class="lbl">Not sure of the real content</span><span class="hint">Enter a range and the plan uses the low end.</span></span>
+              <input type="checkbox" class="switch" id="in-uncertain" role="switch">
+            </label>
+            <div class="field" id="highMaxWrap" hidden>
+              <span class="lbl" id="lb-highMax">Highest likely content</span>
+              <div class="stepper" data-key="highMax">
+                <button type="button" class="step" data-dir="-1">−</button>
+                <label class="num" for="in-highMax"><span class="pre">E</span><input id="in-highMax" class="numin" data-key="highMax" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-highMax"></label>
+                <button type="button" class="step" data-dir="1">+</button>
+              </div>
+              <p class="err" data-err="highMax"></p>
+            </div>
+          </section>
+
+          <section class="group" aria-labelledby="g-mode" id="modeGroup">
+            <h2 id="g-mode">How to fill</h2>
+            <div class="seg wide" role="group" aria-label="Calculation">
+              <button type="button" id="mode-fill" data-mode="fill" aria-pressed="true">Plan both fuels</button>
+              <button type="button" id="mode-second" data-mode="second" aria-pressed="false">Already pumped one</button>
+            </div>
+            <div class="field" id="modeFill">
+              <div class="chips" role="group" aria-label="How much to add">
+                <button type="button" class="chip" data-fill="full">Fill up</button>
+                <button type="button" class="chip" data-fill="amount">Set amount</button>
+              </div>
+              <div class="field" id="addWrap" hidden>
+                <span class="lbl" id="lb-addAmt">Adding this time <span class="lbl-u" data-u>gal</span></span>
+                <div class="stepper" data-key="addAmt">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-addAmt"><input id="in-addAmt" class="numin" data-key="addAmt" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-addAmt"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="addAmt"></p>
+              </div>
+              <p class="hint" data-room></p>
+            </div>
+            <div class="field" id="modeSecond" hidden>
+              <span class="lbl" id="lb-f1">Fuel you already pumped (fuel 1)</span>
+              <div class="chips" role="group" aria-labelledby="lb-f1">
+                <button type="button" class="chip" data-f1="low"><i class="sw low"></i><span id="f1LowName">E10</span></button>
+                <button type="button" class="chip" data-f1="high"><i class="sw high"></i><span id="f1HighName">E85</span></button>
+              </div>
+              <div class="field">
+                <span class="lbl" id="lb-f1Amt">Amount pumped <span class="lbl-u" data-u>gal</span></span>
+                <div class="stepper" data-key="f1Amt">
+                  <button type="button" class="step" data-dir="-1">−</button>
+                  <label class="num" for="in-f1Amt"><input id="in-f1Amt" class="numin" data-key="f1Amt" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-f1Amt"></label>
+                  <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <p class="err" data-err="f1Amt"></p>
+              </div>
+              <p class="hint">The calculator picks fuel 2 and the amount for you.</p>
+            </div>
+          </section>
+        </div>
+
+        <aside class="col-result" id="result" aria-label="Result">
+          <div class="pump" id="pump">
+            <div class="pump-head">
+              <span class="pump-title" id="pumpTitle">Fill plan</span>
+              <span class="pill" id="pill" data-tone="ok">✓ On target</span>
+            </div>
+            <div class="lcd" id="lcd"></div>
+            <div class="pump-foot" aria-live="polite">
+              <div class="stat"><span class="k">In tank after</span><span class="v" id="sumV">—</span></div>
+              <div class="stat"><span class="k">Final ethanol</span><span class="v" id="sumE">—</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="tank-wrap">
+              <div class="tank" id="tank" role="img" aria-label="Tank"></div>
+              <div class="tank-scale"><span>0</span><span id="tankEnd">15 gal</span></div>
+            </div>
+            <ul class="legend" id="tankLegend"></ul>
+            <dl class="facts" id="facts"></dl>
+            <div class="notes" id="notes"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= ratio table ================= -->
+    <section id="view-table" class="view" role="tabpanel" aria-labelledby="tab-table" hidden>
+      <div class="group">
+        <h2>Ratio table</h2>
+        <p class="desc">Ethanol content of an empty-tank blend. Rows are the mix ratio (low-ethanol : high-ethanol, by volume). Columns are the tested content of the high-ethanol fuel.</p>
+        <div class="fields">
+          <div class="field">
+            <span class="lbl" id="lb-tlow"><i class="sw low"></i>Low-ethanol fuel</span>
+            <div class="chips" role="group" aria-labelledby="lb-tlow" id="tLowChips"></div>
+          </div>
+          <div class="field">
+            <span class="lbl" id="lb-target2">Target ethanol</span>
+            <div class="stepper" data-key="target">
+              <button type="button" class="step" data-dir="-1">−</button>
+              <label class="num" for="in-target2"><span class="pre">E</span><input id="in-target2" class="numin" data-key="target" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-target2"></label>
+              <button type="button" class="step" data-dir="1">+</button>
+            </div>
+            <p class="err" data-err="target"></p>
+          </div>
+        </div>
+        <ul class="key" aria-label="Legend">
+          <li><i class="k-dbl"></i>Both optimal</li>
+          <li><i class="k-col"></i>Column optimal</li>
+          <li><i class="k-row"></i>Row optimal</li>
+          <li><i class="k-cur"></i>Your tested content</li>
+          <li><i class="k-below"></i>Grey text = below target</li>
+        </ul>
+        <p class="tsum" id="tSum"></p>
+        <div class="tbl-wrap" id="tblWrap" tabindex="0" aria-label="Ratio table, scrolls in both directions"><table class="qt" id="qt"></table></div>
+        <div class="howto">
+          <p><b>Column optimal</b> (green): for that tested content, the ratio with the most low-ethanol fuel that still meets the target. It uses the least E85.</p>
+          <p><b>Row optimal</b> (blue outline): for that ratio, the lowest high-ethanol content that still meets the target.</p>
+          <p><b>Both optimal</b> (dark green): optimal for its row and its column at the same time.</p>
+          <p>Optimal cells are picked from unrounded values. Displayed blends always round down, so a cell below target never shows as the target. The second header line is the exact ratio for that column.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= prices ================= -->
+    <section id="view-price" class="view" role="tabpanel" aria-labelledby="tab-price" hidden>
+      <div class="price-grid">
+        <section class="group" aria-labelledby="g-prices">
+          <h2 id="g-prices">Prices at this station</h2>
+          <p class="desc" id="pBasis"></p>
+          <div class="prices" id="priceRows"></div>
+          <p class="hint">Leave a fuel blank if the station doesn't sell it.</p>
+          <div class="mpg-row">
+            <span class="mpg-lbl" id="lb-mpg">Your <span data-econ>MPG</span> on</span>
+            <select id="in-mpgRef" class="sel" aria-label="Fuel your mileage was measured on">
+              <option value="0">E0</option>
+              <option value="10">E10</option>
+              <option value="15">E15</option>
+              <option value="30">E30</option>
+              <option value="target" id="mpgRefTarget">E40 (target)</option>
+            </select>
+            <label class="money" for="in-mpg"><input id="in-mpg" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="—" aria-labelledby="lb-mpg"><span data-econ>MPG</span></label>
+          </div>
+          <p class="err" id="err-mpg"></p>
+          <p class="hint">Optional. Estimates assume mileage follows energy content: ethanol carries about two thirds of gasoline's energy by volume.</p>
+        </section>
+        <section class="group" aria-labelledby="g-opts">
+          <h2 id="g-opts">Cheapest mix</h2>
+          <p class="mpg-out" id="mpgOut"></p>
+          <ol class="opts" id="opts"></ol>
+          <p class="hint">Every mix here ends at the same blend and gets the same mileage, so the cheapest fill is also the cheapest per mile.</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <details class="fold" id="fold-math">
+      <summary>How it's calculated</summary>
+      <div class="fold-body">
+        <p class="formula">E<sub>final</sub> = (E<sub>R</sub>·V<sub>R</sub> + E<sub>L</sub>·V<sub>L</sub> + E<sub>H</sub>·V<sub>H</sub>) ÷ (V<sub>R</sub> + V<sub>L</sub> + V<sub>H</sub>)</p>
+        <p>R is the fuel already in the tank, L the low-ethanol fuel, H the high-ethanol fuel and T the target. E is ethanol percent by volume (E40 is 40) and V is volume.</p>
+        <p class="formula"><span>Both fuels, adding A in total:</span><br>V<sub>H</sub> = [E<sub>T</sub>·(V<sub>R</sub> + A) − E<sub>R</sub>·V<sub>R</sub> − E<sub>L</sub>·A] ÷ (E<sub>H</sub> − E<sub>L</sub>), V<sub>L</sub> = A − V<sub>H</sub></p>
+        <p class="formula"><span>Fuel 2 after pumping fuel 1:</span><br>V<sub>2</sub> = [(E<sub>T</sub> − E<sub>R</sub>)·V<sub>R</sub> + (E<sub>T</sub> − E<sub>1</sub>)·V<sub>1</sub>] ÷ (E<sub>2</sub> − E<sub>T</sub>)</p>
+        <p class="formula"><span>Empty-tank ratio:</span><br>V<sub>L</sub> : V<sub>H</sub> = (E<sub>H</sub> − E<sub>T</sub>) : (E<sub>T</sub> − E<sub>L</sub>)</p>
+        <ul>
+          <li>The math runs at full precision. Results show 2 decimals and always round toward meeting the target: high-ethanol amounts round up, low-ethanol amounts round down, and blend percentages round down.</li>
+          <li>When the E85 content is uncertain, the plan uses the lowest value, so even the worst case meets the target.</li>
+          <li>Volumes simply add up. The small volume change when ethanol and gasoline mix is ignored.</li>
+        </ul>
+      </div>
+    </details>
+    <details class="fold" id="fold-phone">
+      <summary>Use it on your iPhone</summary>
+      <div class="fold-body" id="phoneHosted" hidden>
+        <p>In Safari, tap Safari's Share button, then <b>Add to Home Screen</b>. It opens full screen like an app.</p>
+        <p>Open it once from the home screen while you have signal. After that it works with no connection, and updates arrive by themselves when you're back online.</p>
+        <p>To send it to someone, tap <b>Share</b> at the top of this page.</p>
+        <p>Settings and prices stay on your device.</p>
+      </div>
+      <div class="fold-body" id="phoneElse">
+        <p>The public copy at <a href="https://dosmiao.github.io/e40-blend/" target="_blank" rel="noopener">dosmiao.github.io/e40-blend</a> can be added to your iPhone home screen and works offline. Open it in Safari, tap Share, then <b>Add to Home Screen</b>.</p>
+        <p>Send that link to anyone who wants it. Settings and prices stay on each person's own device.</p>
+      </div>
+    </details>
+    <div class="foot-row">
+      <button type="button" class="linkbtn" id="resetBtn">Reset to defaults</button>
+      <span id="resetAsk" hidden>This clears your saved settings and prices. <button type="button" class="linkbtn danger" id="resetYes">Reset</button> <button type="button" class="linkbtn" id="resetNo">Cancel</button></span>
+    </div>
+    <p class="fine">Blends are calculated by volume and are a guide only. Trust your ethanol sensor or a test kit for the real content.</p>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+/* CORE-START */
+const BlendCore = (() => {
+  'use strict';
+  const EPS = 1e-9;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+  // Concentrations are percentages (40, not 0.40); volumes are in any one unit.
+  function mix(parts) {
+    let v = 0, ev = 0;
+    for (const p of parts) { v += p.v; ev += p.e * p.v; }
+    return { v, ev, e: v > EPS ? ev / v : NaN };
+  }
+
+  // Residual (vr @ er) plus `add` volume, split between low (el) and high (eh) fuel, so the tank ends at et.
+  function planFill({ vr, er, add, el, eh, et }) {
+    const vf = vr + add;
+    const base = { vr, er, add, el, eh, et, vf, vl: 0, vh: 0, ef: NaN, minAdd: NaN };
+    if (!(eh > el)) return { ...base, status: 'grades' };
+    if (!(add > EPS)) return { ...base, status: 'noroom', ef: vr > EPS ? er : NaN };
+    const need = et * vf - er * vr;               // ethanol (as %·volume) the full tank must hold
+    const vhExact = (need - el * add) / (eh - el);
+    let status, vh;
+    if (vhExact < -EPS) { status = 'rich'; vh = 0; }          // even all-low ends above target
+    else if (vhExact > add + EPS) { status = 'lean'; vh = add; } // even all-high ends below target
+    else { status = 'ok'; vh = clamp(vhExact, 0, add); }
+    const vl = add - vh;
+    const ef = (er * vr + el * vl + eh * vh) / vf;
+    let minAdd = NaN;                               // smallest add (all one fuel) that would reach et
+    if (status === 'rich') minAdd = el < et - EPS ? vr * (er - et) / (et - el) : Infinity;
+    if (status === 'lean') minAdd = eh > et + EPS ? vr * (et - er) / (eh - et) : Infinity;
+    return { ...base, status, vl, vh, ef, minAdd, vhExact };
+  }
+
+  // Tank already holds residual + fuel 1; how much of fuel 2 (e2) brings it to et?
+  function solveSecond({ vr, er, e1, v1, e2, et }) {
+    const cur = mix([{ v: vr, e: er }, { v: v1, e: e1 }]);
+    const base = { vc: cur.v, evc: cur.ev, ec: cur.e, e2, et, v2: NaN, vf: NaN, ef: NaN };
+    if (!(cur.v > EPS)) return { ...base, status: 'empty' };
+    if (Math.abs(cur.e - et) <= EPS) return { ...base, status: 'ok', v2: 0, vf: cur.v, ef: cur.e };
+    if (Math.abs(e2 - et) <= EPS) return { ...base, status: 'flat' };
+    const v2 = (et * cur.v - cur.ev) / (e2 - et);
+    if (v2 < -EPS) return { ...base, status: 'wrongdir' };
+    const V2 = Math.max(0, v2);
+    const vf = cur.v + V2;
+    return { ...base, status: 'ok', v2: V2, vf, ef: (cur.ev + e2 * V2) / vf };
+  }
+
+  // Cheapest way to put `add` volume in the tank and land exactly on et.
+  // A linear cost with two equality constraints is minimised at a pair of fuels, so checking every pair is exact.
+  function cheapest({ vr, er, add, et, fuels }) {
+    if (!(add > EPS)) return [];
+    const need = et * (vr + add) - er * vr;
+    const best = new Map();
+    for (let i = 0; i < fuels.length; i++) {
+      for (let j = i + 1; j < fuels.length; j++) {
+        let a = fuels[i], b = fuels[j];
+        if (Math.abs(a.e - b.e) <= EPS) continue;
+        if (a.e > b.e) [a, b] = [b, a];
+        const vbExact = (need - a.e * add) / (b.e - a.e);
+        if (vbExact < -EPS || vbExact > add + EPS) continue;
+        const vb = clamp(vbExact, 0, add), va = add - vb;
+        const parts = [];
+        if (va > EPS) parts.push({ fuel: a, v: va });
+        if (vb > EPS) parts.push({ fuel: b, v: vb });
+        const cost = parts.reduce((s, p) => s + p.fuel.price * p.v, 0);
+        const id = parts.map((p) => p.fuel.key).join('+');
+        if (!best.has(id) || best.get(id).cost > cost) best.set(id, { id, parts, cost, perUnit: cost / add });
+      }
+    }
+    return [...best.values()].sort((x, y) => x.cost - y.cost);
+  }
+
+  // Quick-reference grid. Rows: r volumes of low fuel per 1 volume of high fuel. Columns: high-fuel concentrations.
+  const NICE_STEPS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5];
+  function quickTable({ el, et, cols, maxRows = 60, resolution = 0.5 }) {
+    if (el >= et - EPS) return { kind: 'baseAbove' };
+    const feas = cols.filter((c) => c > et + EPS);
+    if (!feas.length) return { kind: 'noHigh' };
+    const rStar = (c) => (c > et + EPS ? (c - et) / (et - el) : NaN);
+    const cMin = Math.min(...feas), cMax = Math.max(...feas);
+    const rLo = rStar(cMin), rHi = rStar(cMax);
+    // Along the target line one row step moves the blend by about step·(et−el)²/(c−el); keep that within `resolution`.
+    const sens = (et - el) ** 2 / (cMin - el);
+    const rowsFor = (s) => Math.ceil(rHi / s - EPS) - Math.floor(rLo / s + EPS) + 3;
+    let si = 0;
+    while (si < NICE_STEPS.length - 1 && NICE_STEPS[si + 1] * sens <= resolution) si++;
+    while (si < NICE_STEPS.length - 1 && rowsFor(NICE_STEPS[si]) > maxRows) si++;
+    const step = NICE_STEPS[si];
+    const k0 = Math.max(0, Math.floor(rLo / step + EPS) - 1);
+    const k1 = Math.ceil(rHi / step - EPS) + 1;
+    const rows = [];
+    for (let k = k0; k <= k1; k++) rows.push(Math.round(k * step * 1e6) / 1e6);
+    const cells = rows.map((r) => cols.map((c) => (el * r + c) / (r + 1)));
+    const meets = cells.map((row) => row.map((v) => v >= et - EPS));
+    // Row optimum: within a ratio, the concentration whose blend is closest to et without going under (raw values).
+    const rowOpt = cells.map((row, i) => {
+      let b = -1;
+      row.forEach((v, j) => { if (meets[i][j] && (b < 0 || v < row[b])) b = j; });
+      return b;
+    });
+    // Column optimum: within a concentration, the ratio whose blend is closest to et without going under.
+    const colOpt = cols.map((c, j) => {
+      let b = -1;
+      rows.forEach((r, i) => { if (meets[i][j] && (b < 0 || cells[i][j] < cells[b][j])) b = i; });
+      return b;
+    });
+    return { kind: 'ok', rows, cols, cells, meets, rowOpt, colOpt, rStar: cols.map(rStar), step };
+  }
+
+  return { EPS, mix, planFill, solveSecond, cheapest, quickTable };
+})();
+/* CORE-END */
+</script>
+
+<script>
+(() => {
+  'use strict';
+  const C = BlendCore, EPS = C.EPS;
+  const GAL_L = 3.785411784;
+  const STORE = 'e40-blend:v1';
+  const STD_LOW = [0, 10, 15, 30];
+  const NUM_KEYS = ['target', 'cap', 'resV', 'resE', 'lowE', 'highE', 'highMax', 'addAmt', 'f1Amt'];
+  const VOL_KEYS = ['cap', 'resV', 'addAmt', 'f1Amt'];
+  const DEFAULTS = {
+    unit: 'gal', target: 40, cap: 15, resV: 3, resE: 38,
+    lowE: 10, lowCustom: false, highE: 85, uncertain: false, highMax: 85,
+    mode: 'fill', fillKind: 'full', addAmt: 8, f1: 'low', f1Amt: 6,
+    prices: {}, mpg: '', mpgRef: '10', tab: 'calc'
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  const app = $('app');
+
+  // ---------- storage (per-device convenience only) ----------
+  function sanitize(s) {
+    s = s && typeof s === 'object' ? s : {};
+    const o = { ...DEFAULTS, prices: {} };
+    for (const k of NUM_KEYS) if (typeof s[k] === 'number' && Number.isFinite(s[k])) o[k] = s[k];
+    if (s.unit === 'L') o.unit = 'L';
+    o.lowCustom = s.lowCustom === true;
+    o.uncertain = s.uncertain === true;
+    if (s.mode === 'second') o.mode = 'second';
+    if (s.fillKind === 'amount') o.fillKind = 'amount';
+    if (s.f1 === 'high') o.f1 = 'high';
+    if (['calc', 'table', 'price'].includes(s.tab)) o.tab = s.tab;
+    if (typeof s.mpg === 'string' && s.mpg.length <= 10) o.mpg = s.mpg;
+    if (['0', '10', '15', '30', 'target'].includes(s.mpgRef)) o.mpgRef = s.mpgRef;
+    if (s.prices && typeof s.prices === 'object') {
+      for (const [k, v] of Object.entries(s.prices)) if (typeof v === 'string' && v.length <= 10) o.prices[k] = v;
+    }
+    return o;
+  }
+  function load() {
+    try { return sanitize(JSON.parse(localStorage.getItem(STORE) || 'null')); } catch (e) { return sanitize(null); }
+  }
+  let saveTimer = 0;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }, 200);
+  }
+
+  let S = load();
+  const raw = {}; // text being typed, per numeric key, until the field is left
+
+  // ---------- formatting ----------
+  const nz = (v) => (v === 0 ? 0 : v);
+  const r2 = (x) => nz(Math.round(x * 100) / 100);
+  const floor2 = (x) => nz(Math.floor(x * 100 + 1e-7) / 100);
+  const ceil2 = (x) => nz(Math.ceil(x * 100 - 1e-7) / 100);
+  const f2 = (x) => r2(x).toFixed(2);
+  const fmtIn = (x) => String(r2(x));
+  const grade = (x) => 'E' + fmtIn(x);
+  const eTxt = (x) => 'E' + floor2(x).toFixed(2); // blend percentages always round down
+  const unit = () => S.unit;
+  const UNIT = () => (S.unit === 'gal' ? 'GAL' : 'L');
+  const money = (x) => '$' + f2(x);
+  const room = () => Math.max(0, S.cap - S.resV);
+  const volStep = () => (S.unit === 'gal' ? 0.5 : 1);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function parseNum(t) {
+    if (typeof t !== 'string') return NaN;
+    const s = t.trim().replace(/[，,]/g, '.').replace(/^e/i, '');
+    if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  const badge = (kind) => `<span class="badge ${kind}">${kind === 'high' ? grade(S.highE) : grade(S.lowE)}</span>`;
+  const fuelName = (kind) => (kind === 'high' ? grade(S.highE) : grade(S.lowE));
+
+  // ---------- mileage ----------
+  // Mileage tracks energy content. Ethanol has about 67% of gasoline's energy by volume (≈76,300 vs ≈114,000 BTU/gal).
+  const ETH_ENERGY = 0.67;
+  const energy = (e) => 1 - (1 - ETH_ENERGY) * e / 100;
+  const econ = () => (S.unit === 'gal' ? 'MPG' : 'km/L');
+  const dist = () => (S.unit === 'gal' ? 'mi' : 'km');
+  const mpgRefE = () => (S.mpgRef === 'target' ? S.target : Number(S.mpgRef));
+  function mpgBase() {
+    const v = parseNum(S.mpg || '');
+    return Number.isFinite(v) && v > 0 && v <= 200 ? v : NaN;
+  }
+  const mpgAt = (e) => mpgBase() * energy(e) / energy(mpgRefE());
+  const mpgTxt = (lo, hi) => {
+    const a = mpgAt(lo).toFixed(1), b = hi == null ? a : mpgAt(hi).toFixed(1);
+    return a === b ? `≈ ${a} ${econ()}` : `≈ ${b}–${a} ${econ()}`;
+  };
+
+  // ---------- fields & validation ----------
+  const FIELDS = {
+    target: { pct: true, min: 1, max: 99 },
+    cap: { min: 1, max: 999 },
+    resV: { min: 0, max: () => S.cap, maxMsg: () => `Can't be more than the tank holds (${fmtIn(S.cap)} ${unit()})` },
+    resE: { pct: true, min: 0, max: 100 },
+    lowE: { pct: true, min: 0, max: 99 },
+    highE: { pct: true, min: 1, max: 100 },
+    highMax: { pct: true, min: 1, max: 100 },
+    addAmt: { min: 0.01, stepMin: 0.5, max: room, minMsg: 'Must be more than 0', maxMsg: () => `Only ${f2(room())} ${unit()} of room left` },
+    f1Amt: { min: 0, max: room, maxMsg: () => `Only ${f2(room())} ${unit()} of room left` }
+  };
+  const maxOf = (f) => (typeof f.max === 'function' ? f.max() : f.max);
+  function check(key) {
+    const f = FIELDS[key];
+    const v = key in raw ? parseNum(raw[key]) : S[key];
+    if (!Number.isFinite(v)) return 'Enter a number';
+    if (v < f.min - 1e-9) return f.minMsg || (f.pct ? `At least E${f.min}` : `At least ${f.min}`);
+    const max = maxOf(f);
+    if (v > max + 1e-9) return f.maxMsg ? f.maxMsg() : (f.pct ? `At most E${max}` : `At most ${max}`);
+    return '';
+  }
+  function validate() {
+    const errs = {};
+    for (const k of NUM_KEYS) { const m = check(k); if (m) errs[k] = m; }
+    if (!errs.highE && !errs.lowE && S.highE <= S.lowE) errs.highE = `Must be above the low-ethanol fuel (${grade(S.lowE)})`;
+    if (S.uncertain && !errs.highMax && !errs.highE && S.highMax < S.highE) errs.highMax = `Can't be below the lowest value (${grade(S.highE)})`;
+    return errs;
+  }
+  function showErrors(errs) {
+    for (const k of NUM_KEYS) {
+      const msg = errs[k] || '';
+      $$(`.stepper[data-key="${k}"]`).forEach((st) => st.classList.toggle('bad', !!msg));
+      $$(`.numin[data-key="${k}"]`).forEach((el) => el.setAttribute('aria-invalid', msg ? 'true' : 'false'));
+      $$(`[data-err="${k}"]`).forEach((p) => { p.textContent = msg; });
+    }
+  }
+
+  function sizeInput(el) {
+    const v = el.value || '';
+    const digits = v.replace(/[^0-9]/g, '').length, others = v.length - digits;
+    el.style.width = Math.min(8, Math.max(1.4, digits + others * 0.45 + 0.35)) + 'ch';
+  }
+  function setInputs(key, except) {
+    $$(`.numin[data-key="${key}"]`).forEach((el) => {
+      if (el === except) return;
+      el.value = fmtIn(S[key]);
+      sizeInput(el);
+    });
+    if (key === 'highE') syncRange();
+  }
+  function syncRange() { $('in-highRange').value = String(Math.round(Math.min(100, Math.max(50, S.highE)))); }
+
+  function stepKey(key, dir) {
+    const f = FIELDS[key];
+    const step = f.pct ? 1 : volStep();
+    let v = key in raw ? parseNum(raw[key]) : S[key];
+    if (!Number.isFinite(v)) v = S[key];
+    let n = dir > 0 ? Math.floor(v / step + 1e-9) * step + step : Math.ceil(v / step - 1e-9) * step - step;
+    const lo = f.stepMin != null ? f.stepMin : f.min;
+    n = Math.min(Math.max(maxOf(f), lo), Math.max(lo, n));
+    S[key] = r2(n);
+    delete raw[key];
+    setInputs(key);
+    update();
+  }
+
+  // ---------- calculator ----------
+  function computeCalc(errs) {
+    const need = ['target', 'cap', 'resV', 'resE', 'highE'];
+    if (S.lowCustom) need.push('lowE');
+    if (S.uncertain) need.push('highMax');
+    if (S.mode === 'fill' && S.fillKind === 'amount') need.push('addAmt');
+    if (S.mode === 'second') need.push('f1Amt');
+    if (need.some((k) => errs[k])) return { error: true };
+
+    const et = S.target, el = S.lowE, vr = S.resV, er = S.resE;
+    const ehLo = S.highE, ehHi = S.uncertain ? Math.max(S.highMax, S.highE) : S.highE;
+    const ranged = ehHi > ehLo + EPS;
+    const rm = room();
+
+    if (S.mode === 'fill') {
+      const full = S.fillKind === 'full';
+      const add = full ? rm : S.addAmt;
+      const p = C.planFill({ vr, er, add, el, eh: ehLo, et });
+      if (p.status === 'noroom') return { mode: 'fill', status: 'noroom', full, add, vh: 0, vl: 0, vf: vr, ef: p.ef, p };
+      let vh = 0, vl = 0;
+      if (p.status === 'ok') {
+        vh = Math.min(ceil2(p.vh), add);                      // more high fuel = never under target
+        vl = full ? Math.max(0, add - vh) : Math.max(0, floor2(add - vh));
+      } else if (p.status === 'rich') vl = add;
+      else vh = add;
+      const vf = vr + vh + vl;
+      const ef = (er * vr + el * vl + ehLo * vh) / vf;
+      const efHi = (er * vr + el * vl + ehHi * vh) / vf;
+      return { mode: 'fill', status: p.status, full, add, vh, vl, vf, ef, efHi, ranged: ranged && vh > 0, p, rm, ehHi };
+    }
+
+    const v1 = S.f1Amt;
+    const e1Lo = S.f1 === 'high' ? ehLo : el, e1Hi = S.f1 === 'high' ? ehHi : el;
+    const cur = C.mix([{ v: vr, e: er }, { v: v1, e: e1Lo }]);
+    const out = { mode: 'second', cur, v1, rm, ehHi };
+    if (!(cur.v > EPS)) return { ...out, status: 'empty' };
+    const want = cur.e < et - EPS ? 'high' : cur.e > et + EPS ? 'low' : 'none';
+    out.want = want;
+    const ethHi = (v2, kind2) => er * vr + e1Hi * v1 + (kind2 === 'high' ? ehHi : el) * v2;
+    if (want === 'none') return { ...out, status: 'done', v2: 0, vf: cur.v, ef: cur.e, efHi: ethHi(0, 'low') / cur.v, ranged: ranged && S.f1 === 'high' && v1 > 0 };
+    if (want === 'high' && !(ehLo > et + EPS)) return { ...out, status: 'cantHigh' };
+    if (want === 'low' && !(el < et - EPS)) return { ...out, status: 'cantLow' };
+    const e2 = want === 'high' ? ehLo : el;
+    const s = C.solveSecond({ vr, er, e1: e1Lo, v1, e2, et });
+    if (s.status !== 'ok') return { ...out, status: 'cantHigh' };
+    const v2 = want === 'high' ? ceil2(s.v2) : floor2(s.v2);
+    const space = S.cap - cur.v;
+    const usesHigh = S.f1 === 'high' || want === 'high';
+    if (v2 > space + 1e-9) {
+      const v2c = Math.max(0, space);
+      const vf = cur.v + v2c;
+      const ef = (cur.ev + e2 * v2c) / vf;
+      const plan = C.planFill({ vr, er, add: rm, el, eh: ehLo, et });
+      let fix = null;
+      if (plan.status === 'ok' && want !== S.f1) fix = S.f1 === 'low' ? { kind: 'max', v: floor2(plan.vl) } : { kind: 'exact', v: ceil2(plan.vh) };
+      return { ...out, status: 'over', v2, v2c, space, vf, ef, efHi: ethHi(v2c, want) / vf, ranged: ranged && usesHigh, fix };
+    }
+    const vf = cur.v + v2;
+    const ef = (cur.ev + e2 * v2) / vf;
+    return { ...out, status: 'ok', v2, vf, ef, efHi: ethHi(v2, want) / vf, ranged: ranged && usesHigh, left: space - v2 };
+  }
+
+  function lcdRow(step, kind, vol, opt = {}) {
+    const cap = kind === 'high'
+      ? (S.uncertain ? `E85 pump · planned at ${grade(S.highE)}` : S.highE === 85 ? 'High-ethanol' : 'High-ethanol (E85 pump)')
+      : 'Low-ethanol';
+    return `<div class="lcd-row">
+      <div class="lcd-meta"><span class="lcd-step">${step}</span>${badge(kind)}<span class="lcd-cap">${cap}${opt.note ? ' · ' + opt.note : ''}</span></div>
+      <div class="lcd-num">${opt.approx ? '<span class="lcd-approx">≈</span>' : ''}${f2(vol)}<span class="lcd-unit">${UNIT()}</span></div>
+    </div>`;
+  }
+  const PILL = {
+    ok: ['ok', '✓ On target'], done: ['ok', '✓ Already on target'], rich: ['warn', '▲ Above target'],
+    lean: ['bad', '▼ Below target'], over: ['bad', '⚠ Won\'t fit'], err: ['bad', '! Fix inputs'], none: ['warn', '— Nothing to plan']
+  };
+  function setPill(id) {
+    const [tone, txt] = PILL[id];
+    const p = $('pill');
+    p.dataset.tone = tone; p.textContent = txt;
+    const m = $('miniPill');
+    m.dataset.tone = tone; m.textContent = txt.split(' ')[0];
+  }
+  const sumVol = (v, tag) => `${f2(v)}<small>${UNIT()}</small>${tag ? `<small>${tag}</small>` : ''}`;
+  const sumConc = (R) => (R.ranged && R.efHi - R.ef > 0.005 ? `${eTxt(R.ef)}<small>–${floor2(R.efHi).toFixed(2)}</small>` : eTxt(R.ef));
+
+  function renderCalc(R) {
+    const u = unit(), T = grade(S.target);
+    const lcd = [], facts = [], notes = [], segs = [];
+    let mini = '', pill = 'ok', sumV = '—', sumE = '—';
+    $('pumpTitle').textContent = S.mode === 'fill' ? 'Fill plan' : 'Top-up plan';
+
+    if (R.error) {
+      lcd.push('<div class="lcd-blank">Fix the inputs marked in red</div>');
+      pill = 'err';
+      mini = '<span class="msg">Fix the inputs marked in red</span>';
+    } else if (R.mode === 'fill') {
+      segs.push({ kind: 'res', v: S.resV, label: 'In tank' });
+      if (R.status === 'noroom') {
+        lcd.push('<div class="lcd-blank">The tank is already full</div>');
+        pill = Number.isFinite(R.ef) && R.ef >= S.target - EPS ? 'done' : 'lean';
+        sumV = sumVol(S.resV); sumE = Number.isFinite(R.ef) ? eTxt(R.ef) : '—';
+        mini = '<span class="msg">Tank is full</span>';
+        notes.push(['', 'Fuel left equals the tank capacity. Drive a bit, then come back to fill.']);
+      } else {
+        const both = R.vh > 0 && R.vl > 0;
+        const solo = R.full ? 'Fill up with' : 'Pump only';
+        if (R.vh > 0) lcd.push(lcdRow(both ? 'Pump first' : solo, 'high', R.vh));
+        if (R.vl > 0) lcd.push(lcdRow(both ? (R.full ? 'Then fill up' : 'Then pump') : solo, 'low', R.vl, { approx: both && R.full }));
+        if (R.vh > 0) segs.push({ kind: 'high', v: R.vh, label: fuelName('high') });
+        if (R.vl > 0) segs.push({ kind: 'low', v: R.vl, label: fuelName('low') });
+        pill = R.status === 'ok' ? 'ok' : R.status;
+        sumV = sumVol(R.vf, R.full ? 'full' : '');
+        sumE = sumConc(R);
+        const parts = [];
+        if (R.vh > 0) parts.push(`${badge('high')}<span class="num-t">${f2(R.vh)}</span>`);
+        if (R.vl > 0) parts.push(`${badge('low')}<span class="num-t">${f2(R.vl)}</span>`);
+        mini = parts.join('<span class="sep">+</span>') + `<span class="sep">→</span><span class="num-t">${eTxt(R.ef)}</span>`;
+
+        facts.push(['Adding', `${f2(R.vh + R.vl)} ${u}${R.full ? ' (fill up)' : ''}`]);
+        if (R.p.vh > EPS && R.p.vl > EPS) facts.push(['New fuel mix', `low : high = ${floor2(R.p.vl / R.p.vh).toFixed(2)} : 1`]);
+        facts.push(['Tank after', `${f2(R.vf)} / ${f2(S.cap)} ${u}`]);
+        if (R.ranged) facts.push(['Final range', `${eTxt(R.ef)} – ${eTxt(R.efHi)}`]);
+        if (Number.isFinite(mpgBase())) facts.push(['Est. mileage', mpgTxt(R.ef, R.ranged ? R.efHi : null)]);
+
+        if (R.status === 'ok' && both && R.full) {
+          notes.push(['ok', `<b>Pump order:</b> ${fuelName('high')} first, up to ${f2(R.vh)} ${u}, then fill up with ${fuelName('low')} until the pump clicks off. If the tank holds less than you set, the blend ends slightly above target, never below.`]);
+        }
+        if (R.ranged && R.status === 'ok') {
+          notes.push(['', `Planned at the lowest ${grade(S.highE)}, so the worst case is ${eTxt(R.ef)}. If it's really ${grade(R.ehHi)}, you'll get ${eTxt(R.efHi)}.`]);
+        }
+        if (R.status === 'rich') {
+          let t = `<b>Too much ethanol in the tank:</b> even all ${fuelName('low')} only brings it down to ${eTxt(R.ef)}.`;
+          const m = R.p.minAdd;
+          if (!Number.isFinite(m)) t += ` ${fuelName('low')} isn't below the target, so no amount gets it down to ${T}.`;
+          else if (m <= R.rm + 1e-9) t += ` Add ${f2(ceil2(m))} ${u} or more this time to get down to ${T}.`;
+          else t += ` Getting down to ${T} takes ${f2(ceil2(m))} ${u} of ${fuelName('low')}, but only ${f2(R.rm)} ${u} fits.`;
+          notes.push(['warn', t]);
+        }
+        if (R.status === 'lean') {
+          let t = `<b>Can't reach ${T}:</b> even all ${fuelName('high')} only gets to ${eTxt(R.ef)}.`;
+          const m = R.p.minAdd;
+          if (!Number.isFinite(m)) t += ` High-ethanol fuel at ${grade(S.highE)} isn't above the target, so no amount gets there.`;
+          else if (m <= R.rm + 1e-9) t += ` Add ${f2(ceil2(m))} ${u} or more this time to reach it.`;
+          else t += ` You'd need at least ${f2(ceil2(m))} ${u} of ${fuelName('high')}, but only ${f2(R.rm)} ${u} fits.`;
+          notes.push(['bad', t]);
+        }
+      }
+    } else {
+      const cur = R.cur;
+      segs.push({ kind: 'res', v: S.resV, label: 'In tank' });
+      if (S.f1Amt > 0) segs.push({ kind: S.f1, v: S.f1Amt, label: fuelName(S.f1) + ' pumped' });
+      if (R.status === 'empty') {
+        lcd.push('<div class="lcd-blank">The tank is empty. Enter the fuel left or the amount you pumped.</div>');
+        pill = 'none'; mini = '<span class="msg">Enter the amount pumped</span>';
+      } else {
+        lcd.push(`<div class="lcd-now"><span>In tank now</span><span><b>${f2(cur.v)}</b><small>${UNIT()}</small></span><b>${eTxt(cur.e)}</b></div>`);
+        if (R.status === 'done') {
+          lcd.push(`<div class="lcd-blank">Already ${eTxt(cur.e)}. Nothing more to add.</div>`);
+          pill = 'done'; sumV = sumVol(cur.v); sumE = sumConc(R);
+          mini = '<span class="msg">On target, nothing to add</span>';
+        } else if (R.status === 'cantHigh' || R.status === 'cantLow') {
+          const hi = R.status === 'cantHigh';
+          lcd.push(`<div class="lcd-blank">Needs a ${hi ? 'higher' : 'lower'}-ethanol fuel</div>`);
+          pill = hi ? 'lean' : 'rich';
+          sumV = sumVol(cur.v); sumE = eTxt(cur.e);
+          mini = `<span class="msg">Can't reach ${T}</span>`;
+          notes.push([hi ? 'bad' : 'warn', hi
+            ? `<b>Can't reach ${T}:</b> the tank is at ${eTxt(cur.e)} and needs a fuel above the target, but the high-ethanol fuel is only ${grade(S.highE)}.`
+            : `<b>Can't reach ${T}:</b> the tank is at ${eTxt(cur.e)} and needs a fuel below the target, but the low-ethanol fuel is ${grade(S.lowE)}.`]);
+        } else {
+          const over = R.status === 'over';
+          lcd.push(lcdRow(over ? 'Still need' : 'Then add', R.want, R.v2, { note: over ? `only ${f2(R.v2c)} fits` : '' }));
+          segs.push({ kind: R.want, v: R.v2, label: fuelName(R.want) + ' to add' });
+          pill = over ? 'over' : 'ok';
+          sumV = sumVol(R.vf, over ? 'full' : '');
+          sumE = sumConc(R);
+          mini = `<span class="msg">Add</span>${badge(R.want)}<span class="num-t">${f2(R.v2)}</span>` +
+            (over ? '<span class="msg">won\'t fit</span>' : `<span class="sep">→</span><span class="num-t">${eTxt(R.ef)}</span>`);
+          facts.push(['Now (left + fuel 1)', `${f2(cur.v)} ${u} · ${eTxt(cur.e)}`]);
+          facts.push(['Fuel 2', `${fuelName(R.want)} ${f2(R.v2)} ${u}`]);
+          if (!over) facts.push(['Tank after', `${f2(R.vf)} / ${f2(S.cap)} ${u}`]);
+          if (R.ranged) facts.push(['Final range', `${eTxt(R.ef)} – ${eTxt(R.efHi)}`]);
+          if (Number.isFinite(mpgBase())) facts.push(['Est. mileage', mpgTxt(R.ef, R.ranged ? R.efHi : null)]);
+          if (R.want === S.f1) {
+            notes.push(['', `The tank is still ${cur.e > S.target ? 'above' : 'below'} target, so fuel 2 is ${fuelName(R.want)} again.`]);
+          }
+          if (over) {
+            const tone = R.ef >= S.target - EPS ? 'warn' : 'bad';
+            notes.push([tone, `<b>Won't fit:</b> reaching ${T} takes ${f2(R.v2)} ${u} more ${fuelName(R.want)}, but only ${f2(R.space)} ${u} of room is left. Filling up gives ${eTxt(R.ef)}.`]);
+            if (R.fix && R.fix.kind === 'max') notes.push(['', `Next time, pump at most ${f2(R.fix.v)} ${u} of fuel 1 (${fuelName('low')}), then fill up with ${fuelName('high')} to land on ${T}.`]);
+            if (R.fix && R.fix.kind === 'exact') notes.push(['', `For exactly ${T} at full, fuel 1 (${fuelName('high')}) should be ${f2(R.fix.v)} ${u}. You've pumped more, so filling with ${fuelName('low')} ends above target.`]);
+          } else if (R.ranged) {
+            notes.push(['', `Planned at the lowest ${grade(S.highE)}, so the worst case is ${eTxt(R.ef)}. If it's really ${grade(R.ehHi)}, you'll get ${eTxt(R.efHi)}.`]);
+          }
+        }
+      }
+    }
+
+    $('lcd').innerHTML = lcd.join('');
+    $('sumV').innerHTML = sumV;
+    $('sumE').innerHTML = sumE;
+    $('miniBody').innerHTML = mini;
+    setPill(pill);
+    $('facts').innerHTML = facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    $('notes').innerHTML = notes.map(([tone, t]) => `<p class="note"${tone ? ` data-tone="${tone}"` : ''}>${t}</p>`).join('');
+    renderTank(R.error ? [] : segs);
+  }
+
+  function renderTank(segs) {
+    const cap = S.cap > 0 ? S.cap : 1;
+    const total = segs.reduce((a, s) => a + Math.max(0, s.v), 0);
+    const scale = Math.max(cap, total);
+    const pct = (v) => (Math.max(0, v) / scale * 100).toFixed(3) + '%';
+    let h = segs.filter((s) => s.v > 1e-6).map((s) => `<span class="tk ${s.kind}" style="width:${pct(s.v)}"></span>`).join('');
+    const over = total > cap + 1e-6;
+    if (over) h += `<span class="tk-over" style="left:${pct(cap)}"></span><span class="tk-cap" style="left:${pct(cap)}"></span>`;
+    const tank = $('tank');
+    tank.innerHTML = h;
+    tank.setAttribute('aria-label', `Tank: ${segs.map((s) => `${s.label} ${f2(s.v)}`).join(', ')}; capacity ${fmtIn(S.cap)} ${unit()}`);
+    $('tankEnd').textContent = over ? `capacity ${fmtIn(S.cap)} ${unit()} · ${f2(total - cap)} over` : `${fmtIn(S.cap)} ${unit()}`;
+    const items = segs.filter((s) => s.v > 1e-6).map((s) => `<li><i class="tk-key ${s.kind}"></i>${esc(s.label)} <b>${f2(s.v)}</b></li>`);
+    if (segs.length && !over) items.push(`<li><i class="tk-key empty"></i>Free <b>${f2(Math.max(0, cap - total))}</b></li>`);
+    $('tankLegend').innerHTML = items.join('');
+  }
+
+  // ---------- ratio table ----------
+  let tableKey = '';
+  function renderTable(errs) {
+    const blockers = ['target', 'highE'].concat(S.lowCustom ? ['lowE'] : [], S.uncertain ? ['highMax'] : []);
+    const sum = $('tSum'), wrap = $('tblWrap'), tbl = $('qt');
+    if (blockers.some((k) => errs[k])) { tableKey = ''; sum.textContent = 'Fix the inputs marked in red first.'; wrap.hidden = true; return; }
+    const et = S.target, el = S.lowE, u = unit();
+    const lo = S.highE, hi = S.uncertain ? Math.max(S.highMax, lo) : lo;
+    const cMax = Math.min(100, Math.max(85, Math.ceil(hi - 1e-9)));
+    const cMin = Math.max(1, Math.min(60, Math.floor(lo + 1e-9)));
+    const key = [et, el, lo, hi, u].join('|');
+    if (key === tableKey) return;
+    tableKey = key;
+    const cols = [];
+    for (let c = cMax; c >= cMin; c--) cols.push(c);
+    const T = C.quickTable({ el, et, cols });
+    if (T.kind !== 'ok') {
+      wrap.hidden = true;
+      sum.innerHTML = T.kind === 'baseAbove'
+        ? `${grade(el)} is already at or above the ${grade(et)} target, so no high-ethanol fuel is needed.`
+        : `The ${grade(et)} target is above every high-ethanol content in the table (up to E${cMax}), so it can't be reached.`;
+      return;
+    }
+    wrap.hidden = false;
+    const isCur = (c) => c >= Math.floor(lo + 1e-9) && c <= Math.ceil(hi - 1e-9);
+    const rs = (eh) => (eh - et) / (et - el);
+    let s;
+    if (lo > et + EPS) {
+      s = `${grade(lo)} high-ethanol fuel with ${grade(el)}: exact ratio <b>${floor2(rs(lo)).toFixed(2)} : 1</b>, so up to ${floor2(rs(lo)).toFixed(2)} ${u} of low-ethanol fuel per 1 ${u} of high-ethanol fuel.`;
+      if (hi > lo + EPS) s += ` If it's really ${grade(hi)}, up to ${floor2(rs(hi)).toFixed(2)} : 1 works.`;
+    } else {
+      s = `High-ethanol fuel at ${grade(lo)} isn't above the ${grade(et)} target, so it can't get there.`;
+    }
+    sum.innerHTML = s + ` Rows step by ${T.step}.`;
+
+    let h = '<thead><tr><th scope="col" class="corner"><span>low : high</span><small>exact ratio →</small></th>';
+    T.cols.forEach((c, j) => {
+      const r = T.rStar[j];
+      h += `<th scope="col"${isCur(c) ? ' class="cur"' : ''}><span class="ce">E${c}</span><small>${Number.isFinite(r) ? floor2(r).toFixed(2) : '—'}</small></th>`;
+    });
+    h += '</tr></thead><tbody>';
+    T.rows.forEach((r, i) => {
+      h += `<tr><th scope="row">${r.toFixed(2)} : 1</th>`;
+      T.cols.forEach((c, j) => {
+        const ro = T.rowOpt[i] === j, co = T.colOpt[j] === i;
+        const cls = [isCur(c) ? 'cur' : '', T.meets[i][j] ? '' : 'below', ro && co ? 'dbl' : ro ? 'ro' : co ? 'co' : ''].filter(Boolean).join(' ');
+        h += `<td${cls ? ` class="${cls}"` : ''}>${floor2(T.cells[i][j]).toFixed(2)}</td>`;
+      });
+      h += '</tr>';
+    });
+    tbl.innerHTML = h + '</tbody>';
+    requestAnimationFrame(revealCurrent);
+  }
+  function revealCurrent() {
+    const wrap = $('tblWrap');
+    if (wrap.hidden || !wrap.offsetParent) return;
+    const cell = wrap.querySelector('td.cur.co, td.cur.dbl') || wrap.querySelector('thead th.cur');
+    if (!cell) return;
+    const head = wrap.querySelector('thead'), side = wrap.querySelector('tbody th');
+    const hh = head ? head.offsetHeight : 0, sw = side ? side.offsetWidth : 0;
+    const wr = wrap.getBoundingClientRect(), cr = cell.getBoundingClientRect();
+    const x = cr.left - wr.left + wrap.scrollLeft, y = cr.top - wr.top + wrap.scrollTop;
+    wrap.scrollLeft = Math.max(0, x - sw - (wrap.clientWidth - sw - cr.width) / 2);
+    if (cell.tagName === 'TD') wrap.scrollTop = Math.max(0, y - hh - (wrap.clientHeight - hh - cr.height) / 2);
+  }
+
+  // ---------- prices ----------
+  function priceFuels() {
+    const list = STD_LOW.map((e) => ({ key: 'E' + e, e, kind: 'low', name: 'E' + e }));
+    if (!STD_LOW.includes(S.lowE)) list.push({ key: grade(S.lowE), e: S.lowE, kind: 'low', name: grade(S.lowE) });
+    list.push({ key: 'HIGH', e: S.highE, kind: 'high', name: grade(S.highE) });
+    return list;
+  }
+  const priceId = (k) => 'price-' + k.replace(/[^A-Za-z0-9]/g, '_');
+  let priceRowsKey = '';
+  function renderPriceRows() {
+    const list = priceFuels();
+    const key = list.map((f) => f.key + ':' + f.name).join('|') + '|' + S.unit + '|' + S.uncertain;
+    if (key === priceRowsKey) return;
+    priceRowsKey = key;
+    $('priceRows').innerHTML = list.map((f) => `
+      <div class="price-row">
+        <span class="badge ${f.kind}">${esc(f.name)}</span>
+        <span class="pname">${f.kind === 'high' ? (S.uncertain ? 'High-ethanol (E85), at its lowest content' : 'High-ethanol (E85)') : 'Low-ethanol'}</span>
+        <label class="money" for="${priceId(f.key)}"><span>$</span><input id="${priceId(f.key)}" data-price="${esc(f.key)}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="—" aria-label="${esc(f.name)} price per ${S.unit}" value="${esc(S.prices[f.key] || '')}"><span>/${S.unit}</span></label>
+      </div>`).join('');
+  }
+  function renderPrice(errs) {
+    renderPriceRows();
+    const u = unit();
+    const full = S.fillKind === 'full';
+    const add = full ? room() : S.addAmt;
+    const blockers = ['target', 'cap', 'resV', 'resE', 'highE'].concat(full ? [] : ['addAmt'], S.lowCustom ? ['lowE'] : []);
+    const ok = !blockers.some((k) => errs[k]);
+    $('pBasis').innerHTML = ok
+      ? `Using the Calculator tab: ${f2(S.resV)} ${u} of ${grade(S.resE)} in the tank, adding <b>${f2(add)} ${u}</b>${full ? ' (fill up)' : ''}, target <b>${grade(S.target)}</b>. <button type="button" class="linkbtn" data-goto="calc">Change</button>`
+      : `Some inputs on the Calculator tab need fixing first. <button type="button" class="linkbtn" data-goto="calc">Fix them</button>`;
+    const box = $('opts');
+    const base = mpgBase(), refE = mpgRefE(), T = grade(S.target);
+    const mOut = $('mpgOut');
+    if (!ok) { box.innerHTML = ''; mOut.hidden = true; return; }
+    mOut.hidden = false;
+    const drop = Math.round((1 - energy(S.target) / energy(refE)) * 100);
+    const refName = grade(refE), same = Math.abs(refE - S.target) < EPS;
+    const rel = drop > 0 ? `about ${drop}% lower than` : drop < 0 ? `about ${-drop}% higher than` : 'about the same as';
+    if (Number.isFinite(base)) {
+      mOut.innerHTML = same
+        ? `<b>${base.toFixed(1)} ${econ()}</b> on this ${T} tank, as you measured.`
+        : `<b>${mpgAt(S.target).toFixed(1)} ${econ()}</b> estimated on this ${T} tank, ${rel} your ${base.toFixed(1)} on ${refName}.`;
+    } else {
+      mOut.innerHTML = same
+        ? `Enter your ${econ()} on ${T} to see cost per ${dist()}.`
+        : `${econ()} on this ${T} tank runs ${rel} on ${refName}. Enter your ${econ()} on ${refName} to see the numbers.`;
+    }
+    const fuels = priceFuels().map((f) => ({ ...f, price: parseNum(S.prices[f.key] || '') })).filter((f) => Number.isFinite(f.price) && f.price > 0);
+    if (fuels.length < 2) { box.innerHTML = '<li class="opt-empty">Enter prices for at least two fuels to see which mix costs least.</li>'; return; }
+    if (!(add > EPS)) { box.innerHTML = '<li class="opt-empty">The tank is already full, so there is nothing to buy.</li>'; return; }
+    const opts = C.cheapest({ vr: S.resV, er: S.resE, add, et: S.target, fuels });
+    if (!opts.length) {
+      // The fuel going in has to average this content for the tank to land on target.
+      const eReq = (S.target * (S.resV + add) - S.resE * S.resV) / add;
+      const req = `E${floor2(eReq).toFixed(2)}`;
+      let msg;
+      if (!(eReq > 0 && eReq < 100)) msg = `No fuel can bring this tank to ${grade(S.target)} with ${f2(add)} ${u} added. Try a different amount on the Calculator tab.`;
+      else if (fuels.some((f) => f.e > eReq + EPS)) msg = `To end at ${grade(S.target)}, the fuel you add has to average ${req}. Add a price for a fuel below that, such as ${eReq > 10 ? 'E10' : 'E0'}.`;
+      else msg = `To end at ${grade(S.target)}, the fuel you add has to average ${req}. Add a price for a fuel above that, such as E85.`;
+      box.innerHTML = `<li class="opt-empty">${msg}</li>`;
+      return;
+    }
+    const curId = grade(S.lowE) + '+HIGH';
+    const curOpt = opts.find((o) => o.id === curId);
+    box.innerHTML = opts.slice(0, 6).map((o, i) => {
+      const tags = [];
+      if (i === 0) tags.push('<span class="tag best">Cheapest</span>');
+      if (o.id === curId) tags.push('<span class="tag">Your Calculator pick</span>');
+      if (i === 0 && curOpt && curOpt !== o && curOpt.cost - o.cost >= 0.005) tags.push(`<span class="tag best">Saves ${money(curOpt.cost - o.cost)} vs your pick</span>`);
+      const fuelsHtml = o.parts.map((p) => `<span class="badge ${p.fuel.kind}">${esc(p.fuel.name)}</span>`).join('<span>+</span>');
+      const vols = o.parts.map((p) => `${esc(p.fuel.name)} ${f2(p.v)} ${u}`).join(' · ');
+      return `<li class="opt${i === 0 ? ' best' : ''}">
+        <div class="opt-top"><span class="opt-fuels">${fuelsHtml}</span><span class="opt-cost">${money(o.cost)}</span></div>
+        <div class="opt-sub">${vols} · avg ${money(o.perUnit)}/${u}${Number.isFinite(base) ? ` · $${(o.perUnit / mpgAt(S.target)).toFixed(3)}/${dist()}` : ''}</div>
+        ${tags.length ? `<div class="tags">${tags.join('')}</div>` : ''}
+      </li>`;
+    }).join('');
+  }
+
+  // ---------- sharing (hosted copy only) ----------
+  const hosted = (() => {
+    try { return !!document.querySelector('meta[name="e40-pwa"]') && window.self === window.top && /^https?:$/.test(location.protocol); } catch (e) { return false; }
+  })();
+  const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
+  let toastTimer = 0;
+  function toast(msg, ms = 2200) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+  }
+  async function shareApp() {
+    const url = appUrl();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'E40 Blend Calculator', text: 'How much E85 and pump gas to add for an E40 blend, counting what is already in the tank.', url });
+        return;
+      } catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(url); toast('Link copied'); } catch (err) { toast('Copy this link: ' + url, 7000); }
+  }
+
+  // ---------- page state ----------
+  let tChipsHtml = '';
+  function refreshChrome() {
+    const press = (sel, pred) => $$(sel).forEach((b) => b.setAttribute('aria-pressed', String(pred(b))));
+    press('[data-low]', (b) => (b.dataset.low === 'custom' ? S.lowCustom : !S.lowCustom && Number(b.dataset.low) === S.lowE));
+    press('[data-mode]', (b) => b.dataset.mode === S.mode);
+    press('[data-fill]', (b) => b.dataset.fill === S.fillKind);
+    press('[data-f1]', (b) => b.dataset.f1 === S.f1);
+    press('[data-unit]', (b) => b.dataset.unit === S.unit);
+    press('[data-frac]', (b) => S.cap > 0 && Math.abs(S.cap * Number(b.dataset.frac) - S.resV) < 0.005);
+    $('lowCustomWrap').hidden = !S.lowCustom;
+    $('highMaxWrap').hidden = !S.uncertain;
+    $('modeFill').hidden = S.mode !== 'fill';
+    $('modeSecond').hidden = S.mode !== 'second';
+    $('addWrap').hidden = S.fillKind !== 'amount';
+    $('in-uncertain').checked = S.uncertain;
+    $('lb-highE').textContent = S.uncertain ? 'High-ethanol fuel (E85), lowest likely' : 'High-ethanol fuel (E85), tested';
+    $$('[data-u]').forEach((el) => { el.textContent = S.unit; });
+    $$('[data-econ]').forEach((el) => { el.textContent = econ(); });
+    $('mpgRefTarget').textContent = `${grade(S.target)} (your target)`;
+    $('err-mpg').textContent = S.mpg && !Number.isFinite(mpgBase()) ? 'Enter a number' : '';
+    $$('[data-room]').forEach((el) => { el.textContent = `Room in tank: ${f2(room())} ${S.unit}`; });
+    $('f1LowName').textContent = grade(S.lowE);
+    $('f1HighName').textContent = grade(S.highE);
+    if (S.target >= 1 && S.target <= 99) $('brandE').textContent = grade(S.target);
+    const frac = S.cap > 0 ? Math.min(1, Math.max(0, S.resV / S.cap)) : 0;
+    $('gaugeFill').style.width = (frac * 100).toFixed(1) + '%';
+    $('resPct').textContent = S.cap > 0 ? `about ${Math.round(frac * 100)}% full` : '';
+    const tChips = STD_LOW.map((e) => `<button type="button" class="chip" data-low="${e}" aria-pressed="${!S.lowCustom && S.lowE === e}">E${e}</button>`);
+    if (S.lowCustom) tChips.push(`<button type="button" class="chip" data-low="custom" aria-pressed="true">${grade(S.lowE)}</button>`);
+    const chipsHtml = tChips.join('');
+    if (chipsHtml !== tChipsHtml) { tChipsHtml = chipsHtml; $('tLowChips').innerHTML = chipsHtml; }
+  }
+
+  function update() {
+    const errs = validate();
+    showErrors(errs);
+    refreshChrome();
+    renderCalc(computeCalc(errs));
+    if (S.tab === 'table') renderTable(errs);
+    if (S.tab === 'price') renderPrice(errs);
+    save();
+  }
+
+  function setTab(t, focus) {
+    S.tab = t;
+    app.dataset.tab = t;
+    for (const name of ['calc', 'table', 'price']) {
+      const on = name === t;
+      const tab = $('tab-' + name);
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      $('view-' + name).hidden = !on;
+    }
+    if (focus) $('tab-' + t).focus();
+    tableKey = '';
+    update();
+    const main = $('main');
+    const top = main.getBoundingClientRect().top + window.scrollY - $('bar').offsetHeight - 6;
+    if (window.scrollY > top) window.scrollTo(0, Math.max(0, top));
+  }
+
+  function setUnit(next) {
+    if (next === S.unit) return;
+    const k = next === 'L' ? GAL_L : 1 / GAL_L;
+    for (const key of VOL_KEYS) { S[key] = r2(S[key] * k); delete raw[key]; }
+    for (const [pk, pv] of Object.entries(S.prices)) {
+      const n = parseNum(pv);
+      if (Number.isFinite(n)) S.prices[pk] = String(Math.round((n / k) * 1000) / 1000);
+    }
+    const m = parseNum(S.mpg || '');
+    if (Number.isFinite(m)) S.mpg = String(r2(next === 'L' ? m * 1.609344 / GAL_L : m * GAL_L / 1.609344));
+    S.unit = next;
+    $('in-mpg').value = S.mpg;
+    VOL_KEYS.forEach((key) => setInputs(key));
+    priceRowsKey = '';
+    tableKey = '';
+    update();
+  }
+
+  function initInputs() {
+    $$('.numin').forEach((el) => { el.value = fmtIn(S[el.dataset.key]); sizeInput(el); });
+    syncRange();
+    $('in-mpg').value = S.mpg;
+    $('in-mpgRef').value = S.mpgRef;
+    priceRowsKey = '';
+    tableKey = '';
+  }
+  function labelSteppers() {
+    $$('.stepper').forEach((st) => {
+      const inp = st.querySelector('input');
+      const lab = inp && $(inp.getAttribute('aria-labelledby'));
+      const name = lab ? (lab.childNodes[0] || lab).textContent.trim().toLowerCase() : '';
+      const [minus, plus] = st.querySelectorAll('.step');
+      if (minus) minus.setAttribute('aria-label', 'Decrease ' + name);
+      if (plus) plus.setAttribute('aria-label', 'Increase ' + name);
+    });
+  }
+
+  // ---------- events ----------
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.classList.contains('numin')) {
+      const key = el.dataset.key;
+      raw[key] = el.value;
+      const v = parseNum(el.value);
+      if (Number.isFinite(v)) S[key] = v;
+      $$(`.numin[data-key="${key}"]`).forEach((o) => { if (o !== el) { o.value = el.value; sizeInput(o); } });
+      sizeInput(el);
+      if (key === 'highE' && Number.isFinite(v)) syncRange();
+      update();
+    } else if (el.id === 'in-highRange') {
+      S.highE = Number(el.value);
+      delete raw.highE;
+      setInputs('highE');
+      update();
+    } else if (el.dataset && el.dataset.price !== undefined) {
+      S.prices[el.dataset.price] = el.value.trim();
+      update();
+    } else if (el.id === 'in-mpg') {
+      S.mpg = el.value.trim();
+      update();
+    }
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.id === 'in-mpgRef') { S.mpgRef = e.target.value; update(); return; }
+    if (e.target.id === 'in-uncertain') {
+      S.uncertain = e.target.checked;
+      if (S.uncertain && !(S.highMax > S.highE)) { S.highMax = Math.min(100, Math.max(S.highE, 83)); if (S.highMax <= S.highE) S.highMax = Math.min(100, S.highE + 5); setInputs('highMax'); }
+      priceRowsKey = '';
+      update();
+    }
+  });
+  document.addEventListener('focusout', (e) => {
+    const el = e.target;
+    if (!el.classList || !el.classList.contains('numin')) return;
+    const key = el.dataset.key;
+    if (key in raw) { delete raw[key]; setInputs(key); update(); }
+  });
+  document.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (el.classList && el.classList.contains('numin')) setTimeout(() => { try { el.setSelectionRange(0, el.value.length); } catch (err) { /* ignore */ } }, 0);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type === 'text') e.target.blur();
+  });
+
+  // Steppers: tap to step once, press and hold to repeat.
+  let holdT = 0, holdI = 0, held = false;
+  const stopHold = () => { clearTimeout(holdT); clearInterval(holdI); holdT = holdI = 0; };
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest && e.target.closest('.step');
+    if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    held = false;
+    stopHold();
+    const key = b.closest('.stepper').dataset.key, dir = Number(b.dataset.dir);
+    holdT = setTimeout(() => { held = true; stepKey(key, dir); holdI = setInterval(() => stepKey(key, dir), 80); }, 450);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => document.addEventListener(t, stopHold, true));
+  document.addEventListener('contextmenu', (e) => { if (e.target.closest && e.target.closest('.step')) e.preventDefault(); });
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+    if (b.classList.contains('step')) {
+      if (held) { held = false; return; }
+      stepKey(b.closest('.stepper').dataset.key, Number(d.dir));
+    } else if (b.getAttribute('role') === 'tab') {
+      setTab(b.id.slice(4), false);
+    } else if (d.unit) {
+      setUnit(d.unit);
+    } else if (d.low !== undefined) {
+      if (d.low === 'custom') {
+        const was = S.lowCustom;
+        S.lowCustom = true;
+        update();
+        if (!was && S.tab === 'calc') $('in-lowE').focus();
+      } else {
+        S.lowE = Number(d.low); S.lowCustom = false; delete raw.lowE;
+        setInputs('lowE');
+        priceRowsKey = '';
+        update();
+      }
+    } else if (d.frac !== undefined) {
+      S.resV = r2(S.cap * Number(d.frac)); delete raw.resV;
+      setInputs('resV');
+      update();
+    } else if (d.mode) {
+      S.mode = d.mode; update();
+    } else if (d.fill) {
+      S.fillKind = d.fill;
+      if (d.fill === 'amount' && S.addAmt > room()) { S.addAmt = floor2(room()); setInputs('addAmt'); }
+      update();
+    } else if (d.f1) {
+      S.f1 = d.f1; update();
+    } else if (d.goto) {
+      S.mode = 'fill';
+      setTab(d.goto, false);
+      const g = $('modeGroup');
+      if (g) g.scrollIntoView({ block: 'center' });
+    } else if (b.id === 'shareBtn') {
+      shareApp();
+    } else if (b.id === 'mini') {
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      $('result').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    } else if (b.id === 'resetBtn') {
+      $('resetAsk').hidden = false; b.hidden = true;
+    } else if (b.id === 'resetNo') {
+      $('resetAsk').hidden = true; $('resetBtn').hidden = false;
+    } else if (b.id === 'resetYes') {
+      try { localStorage.removeItem(STORE); } catch (err) { /* ignore */ }
+      S = sanitize(null);
+      for (const k of Object.keys(raw)) delete raw[k];
+      $('resetAsk').hidden = true; $('resetBtn').hidden = false;
+      initInputs();
+      setTab('calc', false);
+      window.scrollTo(0, 0);
+    }
+  });
+
+  $('tabsList').addEventListener('keydown', (e) => {
+    const order = ['calc', 'table', 'price'];
+    let i = order.indexOf(S.tab);
+    if (e.key === 'ArrowRight') i = (i + 1) % 3;
+    else if (e.key === 'ArrowLeft') i = (i + 2) % 3;
+    else if (e.key === 'Home') i = 0;
+    else if (e.key === 'End') i = 2;
+    else return;
+    e.preventDefault();
+    setTab(order[i], true);
+  });
+
+  const bar = $('bar');
+  const onScroll = () => bar.classList.toggle('scrolled', window.scrollY > 30);
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // ---------- boot ----------
+  const hashTab = (location.hash || '').slice(1);
+  if (['calc', 'table', 'price'].includes(hashTab)) S.tab = hashTab;
+  $('shareBtn').hidden = !hosted;
+  $('phoneHosted').hidden = !hosted;
+  $('phoneElse').hidden = hosted;
+  labelSteppers();
+  initInputs();
+  setTab(S.tab, false);
+  onScroll();
+
+  // Hosted on its own next to sw.js, the page keeps working offline after the first visit.
+  try {
+    if (hosted) {
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = 'manifest.webmanifest';
+      document.head.appendChild(link);
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  } catch (err) { /* offline support is optional */ }
+})();
+</script>
+</body>
+</html>
