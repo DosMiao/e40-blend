@@ -486,25 +486,13 @@ button { cursor: pointer; }
 .opt.best { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
 .opt-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .opt-fuels { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--ink-3); }
-.opt-cost { font-family: var(--f-display); font-size: 28px; line-height: 1; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.opt-cost { font-family: var(--f-display); font-size: 28px; line-height: 1; padding-top: 3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.opt-cost small { font-size: 16px; color: var(--ink-3); margin-left: 2px; letter-spacing: 0.04em; }
 .opt-sub { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--field); color: var(--ink-2); }
 .tag.best { background: var(--ok-soft); color: var(--ok); }
 .opt-empty { color: var(--ink-2); font-size: 14px; padding: 14px; border-radius: 12px; background: var(--field); }
-.mpg-row { display: grid; grid-template-columns: auto auto; justify-content: space-between; align-items: center; gap: 8px 10px; padding-top: 14px; border-top: 1px solid var(--rule); }
-.mpg-lbl { grid-column: 1 / -1; font-size: 14px; font-weight: 600; }
-.sel {
-  appearance: none; -webkit-appearance: none; height: 44px; padding: 0 32px 0 12px; border-radius: 10px;
-  border: 1px solid var(--rule); color: var(--ink); font: inherit; font-size: 16px; font-weight: 650;
-  background-color: var(--field);
-  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
-  background-position: right 18px top 20px, right 13px top 20px;
-  background-size: 5px 5px; background-repeat: no-repeat;
-}
-.sel:focus-visible { border-color: var(--focus); box-shadow: 0 0 0 3px var(--focus-ring); outline: none; }
-.mpg-out { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--field); font-size: 14px; line-height: 1.55; }
-.mpg-out b { font-family: var(--f-display); font-size: 22px; font-weight: 700; letter-spacing: 0.01em; vertical-align: -2px; }
 
 /* ---------- footer ---------- */
 .foot { margin-top: 22px; display: grid; gap: 10px; }
@@ -797,25 +785,11 @@ button { cursor: pointer; }
           <p class="desc" id="pBasis"></p>
           <div class="prices" id="priceRows"></div>
           <p class="hint">Leave a fuel blank if the station doesn't sell it.</p>
-          <div class="mpg-row">
-            <span class="mpg-lbl" id="lb-mpg">Your <span data-econ>MPG</span> on</span>
-            <select id="in-mpgRef" class="sel" aria-label="Fuel your mileage was measured on">
-              <option value="0">E0</option>
-              <option value="10">E10</option>
-              <option value="15">E15</option>
-              <option value="30">E30</option>
-              <option value="target" id="mpgRefTarget">E40 (target)</option>
-            </select>
-            <label class="money" for="in-mpg"><input id="in-mpg" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="—" aria-labelledby="lb-mpg"><span data-econ>MPG</span></label>
-          </div>
-          <p class="err" id="err-mpg"></p>
-          <p class="hint">Optional. Estimates assume mileage follows energy content: ethanol carries about two thirds of gasoline's energy by volume.</p>
         </section>
         <section class="group" aria-labelledby="g-opts">
           <h2 id="g-opts">Cheapest mix</h2>
-          <p class="mpg-out" id="mpgOut"></p>
           <ol class="opts" id="opts"></ol>
-          <p class="hint">Every mix here ends at the same blend and gets the same mileage, so the cheapest fill is also the cheapest per mile.</p>
+          <p class="hint">Price per gallon of what you add, averaged over both fuels. Every option ends at the same blend.</p>
         </section>
       </div>
     </section>
@@ -987,7 +961,7 @@ const BlendCore = (() => {
     unit: 'gal', target: 40, cap: 15, resV: 3, resE: 38,
     lowE: 10, lowCustom: false, highE: 85, uncertain: false, highMax: 85,
     mode: 'fill', fillKind: 'full', addAmt: 8, f1: 'low', f1Amt: 6,
-    prices: {}, mpg: '', mpgRef: '10', tab: 'calc'
+    prices: {}, tab: 'calc'
   };
 
   const $ = (id) => document.getElementById(id);
@@ -1006,8 +980,6 @@ const BlendCore = (() => {
     if (s.fillKind === 'amount') o.fillKind = 'amount';
     if (s.f1 === 'high') o.f1 = 'high';
     if (['calc', 'table', 'price'].includes(s.tab)) o.tab = s.tab;
-    if (typeof s.mpg === 'string' && s.mpg.length <= 10) o.mpg = s.mpg;
-    if (['0', '10', '15', '30', 'target'].includes(s.mpgRef)) o.mpgRef = s.mpgRef;
     if (s.prices && typeof s.prices === 'object') {
       for (const [k, v] of Object.entries(s.prices)) if (typeof v === 'string' && v.length <= 10) o.prices[k] = v;
     }
@@ -1036,7 +1008,6 @@ const BlendCore = (() => {
   const eTxt = (x) => 'E' + floor2(x).toFixed(2); // blend percentages always round down
   const unit = () => S.unit;
   const UNIT = () => (S.unit === 'gal' ? 'GAL' : 'L');
-  const money = (x) => '$' + f2(x);
   const room = () => Math.max(0, S.cap - S.resV);
   const volStep = () => (S.unit === 'gal' ? 0.5 : 1);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1049,22 +1020,6 @@ const BlendCore = (() => {
   const badge = (kind) => `<span class="badge ${kind}">${kind === 'high' ? grade(S.highE) : grade(S.lowE)}</span>`;
   const fuelName = (kind) => (kind === 'high' ? grade(S.highE) : grade(S.lowE));
 
-  // ---------- mileage ----------
-  // Mileage tracks energy content. Ethanol has about 67% of gasoline's energy by volume (≈76,300 vs ≈114,000 BTU/gal).
-  const ETH_ENERGY = 0.67;
-  const energy = (e) => 1 - (1 - ETH_ENERGY) * e / 100;
-  const econ = () => (S.unit === 'gal' ? 'MPG' : 'km/L');
-  const dist = () => (S.unit === 'gal' ? 'mi' : 'km');
-  const mpgRefE = () => (S.mpgRef === 'target' ? S.target : Number(S.mpgRef));
-  function mpgBase() {
-    const v = parseNum(S.mpg || '');
-    return Number.isFinite(v) && v > 0 && v <= 200 ? v : NaN;
-  }
-  const mpgAt = (e) => mpgBase() * energy(e) / energy(mpgRefE());
-  const mpgTxt = (lo, hi) => {
-    const a = mpgAt(lo).toFixed(1), b = hi == null ? a : mpgAt(hi).toFixed(1);
-    return a === b ? `≈ ${a} ${econ()}` : `≈ ${b}–${a} ${econ()}`;
-  };
 
   // ---------- fields & validation ----------
   const FIELDS = {
@@ -1255,7 +1210,6 @@ const BlendCore = (() => {
         if (R.p.vh > EPS && R.p.vl > EPS) facts.push(['New fuel mix', `low : high = ${floor2(R.p.vl / R.p.vh).toFixed(2)} : 1`]);
         facts.push(['Tank after', `${f2(R.vf)} / ${f2(S.cap)} ${u}`]);
         if (R.ranged) facts.push(['Final range', `${eTxt(R.ef)} – ${eTxt(R.efHi)}`]);
-        if (Number.isFinite(mpgBase())) facts.push(['Est. mileage', mpgTxt(R.ef, R.ranged ? R.efHi : null)]);
 
         if (R.status === 'ok' && both && R.full) {
           notes.push(['ok', `<b>Pump order:</b> ${fuelName('high')} first, up to ${f2(R.vh)} ${u}, then fill up with ${fuelName('low')} until the pump clicks off. If the tank holds less than you set, the blend ends slightly above target, never below.`]);
@@ -1315,7 +1269,6 @@ const BlendCore = (() => {
           facts.push(['Fuel 2', `${fuelName(R.want)} ${f2(R.v2)} ${u}`]);
           if (!over) facts.push(['Tank after', `${f2(R.vf)} / ${f2(S.cap)} ${u}`]);
           if (R.ranged) facts.push(['Final range', `${eTxt(R.ef)} – ${eTxt(R.efHi)}`]);
-          if (Number.isFinite(mpgBase())) facts.push(['Est. mileage', mpgTxt(R.ef, R.ranged ? R.efHi : null)]);
           if (R.want === S.f1) {
             notes.push(['', `The tank is still ${cur.e > S.target ? 'above' : 'below'} target, so fuel 2 is ${fuelName(R.want)} again.`]);
           }
@@ -1456,22 +1409,7 @@ const BlendCore = (() => {
       ? `Using the Calculator tab: ${f2(S.resV)} ${u} of ${grade(S.resE)} in the tank, adding <b>${f2(add)} ${u}</b>${full ? ' (fill up)' : ''}, target <b>${grade(S.target)}</b>. <button type="button" class="linkbtn" data-goto="calc">Change</button>`
       : `Some inputs on the Calculator tab need fixing first. <button type="button" class="linkbtn" data-goto="calc">Fix them</button>`;
     const box = $('opts');
-    const base = mpgBase(), refE = mpgRefE(), T = grade(S.target);
-    const mOut = $('mpgOut');
-    if (!ok) { box.innerHTML = ''; mOut.hidden = true; return; }
-    mOut.hidden = false;
-    const drop = Math.round((1 - energy(S.target) / energy(refE)) * 100);
-    const refName = grade(refE), same = Math.abs(refE - S.target) < EPS;
-    const rel = drop > 0 ? `about ${drop}% lower than` : drop < 0 ? `about ${-drop}% higher than` : 'about the same as';
-    if (Number.isFinite(base)) {
-      mOut.innerHTML = same
-        ? `<b>${base.toFixed(1)} ${econ()}</b> on this ${T} tank, as you measured.`
-        : `<b>${mpgAt(S.target).toFixed(1)} ${econ()}</b> estimated on this ${T} tank, ${rel} your ${base.toFixed(1)} on ${refName}.`;
-    } else {
-      mOut.innerHTML = same
-        ? `Enter your ${econ()} on ${T} to see cost per ${dist()}.`
-        : `${econ()} on this ${T} tank runs ${rel} on ${refName}. Enter your ${econ()} on ${refName} to see the numbers.`;
-    }
+    if (!ok) { box.innerHTML = ''; return; }
     const fuels = priceFuels().map((f) => ({ ...f, price: parseNum(S.prices[f.key] || '') })).filter((f) => Number.isFinite(f.price) && f.price > 0);
     if (fuels.length < 2) { box.innerHTML = '<li class="opt-empty">Enter prices for at least two fuels to see which mix costs least.</li>'; return; }
     if (!(add > EPS)) { box.innerHTML = '<li class="opt-empty">The tank is already full, so there is nothing to buy.</li>'; return; }
@@ -1489,16 +1427,22 @@ const BlendCore = (() => {
     }
     const curId = grade(S.lowE) + '+HIGH';
     const curOpt = opts.find((o) => o.id === curId);
-    box.innerHTML = opts.slice(0, 6).map((o, i) => {
+    const shown = opts.slice(0, 6);
+    // Two decimals, or three when two options would otherwise show the same price.
+    const two = shown.map((o) => o.perUnit.toFixed(2));
+    const dp = new Set(two).size < two.length ? 3 : 2;
+    const ppu = (x) => '$' + x.toFixed(dp);
+    box.innerHTML = shown.map((o, i) => {
       const tags = [];
       if (i === 0) tags.push('<span class="tag best">Cheapest</span>');
       if (o.id === curId) tags.push('<span class="tag">Your Calculator pick</span>');
-      if (i === 0 && curOpt && curOpt !== o && curOpt.cost - o.cost >= 0.005) tags.push(`<span class="tag best">Saves ${money(curOpt.cost - o.cost)} vs your pick</span>`);
+      const diff = curOpt && curOpt !== o ? curOpt.perUnit - o.perUnit : 0;
+      if (i === 0 && diff >= 0.005) tags.push(`<span class="tag best">${ppu(diff)}/${u} less than your pick</span>`);
       const fuelsHtml = o.parts.map((p) => `<span class="badge ${p.fuel.kind}">${esc(p.fuel.name)}</span>`).join('<span>+</span>');
       const vols = o.parts.map((p) => `${esc(p.fuel.name)} ${f2(p.v)} ${u}`).join(' · ');
       return `<li class="opt${i === 0 ? ' best' : ''}">
-        <div class="opt-top"><span class="opt-fuels">${fuelsHtml}</span><span class="opt-cost">${money(o.cost)}</span></div>
-        <div class="opt-sub">${vols} · avg ${money(o.perUnit)}/${u}${Number.isFinite(base) ? ` · $${(o.perUnit / mpgAt(S.target)).toFixed(3)}/${dist()}` : ''}</div>
+        <div class="opt-top"><span class="opt-fuels">${fuelsHtml}</span><span class="opt-cost">${ppu(o.perUnit)}<small>/${u}</small></span></div>
+        <div class="opt-sub">${vols}</div>
         ${tags.length ? `<div class="tags">${tags.join('')}</div>` : ''}
       </li>`;
     }).join('');
@@ -1546,9 +1490,6 @@ const BlendCore = (() => {
     $('in-uncertain').checked = S.uncertain;
     $('lb-highE').textContent = S.uncertain ? 'High-ethanol fuel (E85), lowest likely' : 'High-ethanol fuel (E85), tested';
     $$('[data-u]').forEach((el) => { el.textContent = S.unit; });
-    $$('[data-econ]').forEach((el) => { el.textContent = econ(); });
-    $('mpgRefTarget').textContent = `${grade(S.target)} (your target)`;
-    $('err-mpg').textContent = S.mpg && !Number.isFinite(mpgBase()) ? 'Enter a number' : '';
     $$('[data-room]').forEach((el) => { el.textContent = `Room in tank: ${f2(room())} ${S.unit}`; });
     $('f1LowName').textContent = grade(S.lowE);
     $('f1HighName').textContent = grade(S.highE);
@@ -1598,10 +1539,7 @@ const BlendCore = (() => {
       const n = parseNum(pv);
       if (Number.isFinite(n)) S.prices[pk] = String(Math.round((n / k) * 1000) / 1000);
     }
-    const m = parseNum(S.mpg || '');
-    if (Number.isFinite(m)) S.mpg = String(r2(next === 'L' ? m * 1.609344 / GAL_L : m * GAL_L / 1.609344));
     S.unit = next;
-    $('in-mpg').value = S.mpg;
     VOL_KEYS.forEach((key) => setInputs(key));
     priceRowsKey = '';
     tableKey = '';
@@ -1611,8 +1549,6 @@ const BlendCore = (() => {
   function initInputs() {
     $$('.numin').forEach((el) => { el.value = fmtIn(S[el.dataset.key]); sizeInput(el); });
     syncRange();
-    $('in-mpg').value = S.mpg;
-    $('in-mpgRef').value = S.mpgRef;
     priceRowsKey = '';
     tableKey = '';
   }
@@ -1647,13 +1583,9 @@ const BlendCore = (() => {
     } else if (el.dataset && el.dataset.price !== undefined) {
       S.prices[el.dataset.price] = el.value.trim();
       update();
-    } else if (el.id === 'in-mpg') {
-      S.mpg = el.value.trim();
-      update();
     }
   });
   document.addEventListener('change', (e) => {
-    if (e.target.id === 'in-mpgRef') { S.mpgRef = e.target.value; update(); return; }
     if (e.target.id === 'in-uncertain') {
       S.uncertain = e.target.checked;
       if (S.uncertain && !(S.highMax > S.highE)) { S.highMax = Math.min(100, Math.max(S.highE, 83)); if (S.highMax <= S.highE) S.highMax = Math.min(100, S.highE + 5); setInputs('highMax'); }
