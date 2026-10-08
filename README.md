@@ -19,6 +19,7 @@ To send it to someone, tap **Share** at the top of the app, or send them the lin
 - **Ratio table:** empty-tank blends for E85 tested anywhere from E85 down to E60, with row, column and double-optimal cells marked.
 - **Prices:** enter the station's prices and see each fuel pair's blended price per gallon, cheapest first.
 - **Unsure of your E85's real content?** Enter a range. The plan uses the low end, so even the worst case meets the target.
+- **Settings:** the formulas, how to add the app to your home screen, and a button that resets your saved data.
 
 Amounts round toward meeting the target: E85 rounds up, pump gas rounds down, and blend percentages round down. Settings stay on your own device. Results are a guide only, so trust your ethanol sensor or a test kit for the real content.
 

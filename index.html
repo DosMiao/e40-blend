@@ -245,6 +245,15 @@ button { cursor: pointer; }
   background: var(--thumb); color: var(--ink); box-shadow: 0 1px 3px var(--shade);
 }
 .seg.wide { display: grid; width: 100%; }
+.tabs > button { padding: 6px 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.qchip {
+  appearance: none; height: 32px; padding: 3px 2px 0; border-radius: 8px; border: 1px solid var(--rule);
+  background: var(--field); color: var(--ink-2); font-family: var(--f-display); font-size: 17px; font-weight: 700;
+  letter-spacing: 0.02em; touch-action: manipulation;
+}
+.qchip:hover { background: var(--hover); }
+.qchip[aria-pressed="true"] { background: var(--sel); border-color: var(--sel); color: var(--sel-ink); }
 .seg.wide > button { white-space: normal; line-height: 1.25; text-wrap: balance; }
 
 /* ---------- sticky bar ---------- */
@@ -284,7 +293,6 @@ button { cursor: pointer; }
 .group h2 { margin: 0; font-size: 12px; font-weight: 700; color: var(--ink-2); letter-spacing: 0.09em; text-transform: uppercase; }
 .group-head.with-ctl { align-items: center; }
 .seg-sm > button { min-height: 30px; padding: 4px 13px; font-size: 13px; }
-.fold-body a { color: var(--focus); font-weight: 650; }
 .group-head .aside { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .desc { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 46em; }
 
@@ -494,30 +502,30 @@ button { cursor: pointer; }
 .tag.best { background: var(--ok-soft); color: var(--ok); }
 .opt-empty { color: var(--ink-2); font-size: 14px; padding: 14px; border-radius: 12px; background: var(--field); }
 
-/* ---------- footer ---------- */
-.foot { margin-top: 22px; display: grid; gap: 10px; }
-.fold { background: var(--panel); border-radius: 14px; }
-.fold > summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 650; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-radius: 14px; }
-.fold > summary::-webkit-details-marker { display: none; }
-.fold > summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); transition: transform 0.2s; margin-right: 4px; flex: none; }
-.fold[open] > summary::after { transform: rotate(-135deg); }
-.fold-body { padding: 0 16px 16px; display: grid; gap: 10px; font-size: 14px; color: var(--ink-2); }
-.fold-body p, .fold-body ul { margin: 0; }
-.fold-body ul { padding-left: 1.2em; display: grid; gap: 4px; }
+/* ---------- settings ---------- */
+.settings { display: grid; gap: 14px; }
+.set-body { display: grid; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.set-body p, .set-body ul { margin: 0; }
+.set-body ul { padding-left: 1.2em; display: grid; gap: 4px; }
+.set-body a { color: var(--focus); font-weight: 650; }
 .formula { padding: 10px 12px; background: var(--field); border-radius: 10px; color: var(--ink); font-variant-numeric: tabular-nums; overflow-x: auto; line-height: 1.7; }
 .formula span { color: var(--ink-2); }
-.foot-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 2px; font-size: 14px; color: var(--ink-2); }
+.reset-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
+.reset-ask { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn-danger { appearance: none; height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--bad); background: transparent; color: var(--bad); font-size: 14px; font-weight: 650; touch-action: manipulation; }
+.btn-danger.solid { background: var(--bad); color: var(--sel-ink); }
 .linkbtn { appearance: none; border: 0; background: none; padding: 4px 0; color: var(--focus); font-weight: 650; font-size: 14px; }
-.linkbtn.danger { color: var(--bad); }
-.fine { margin: 0; font-size: 12px; color: var(--ink-3); }
 
 @media (min-width: 900px) {
   .calc-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 410px); align-items: start; gap: 18px; }
   .col-result { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 70px); }
   .mini { display: none; }
   .price-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .settings { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; }
+  .settings .formula-card { grid-row: span 2; }
 }
 @media (max-width: 400px) {
+  .tabs > button { font-size: 13px; }
   .stepper { grid-template-columns: 40px minmax(0, 1fr) 40px; }
   .group { padding: 16px 14px; }
 }
@@ -544,6 +552,7 @@ button { cursor: pointer; }
       <button type="button" role="tab" id="tab-calc" aria-controls="view-calc" aria-selected="true">Calculator</button>
       <button type="button" role="tab" id="tab-table" aria-controls="view-table" aria-selected="false" tabindex="-1">Ratio table</button>
       <button type="button" role="tab" id="tab-price" aria-controls="view-price" aria-selected="false" tabindex="-1">Prices</button>
+      <button type="button" role="tab" id="tab-settings" aria-controls="view-settings" aria-selected="false" tabindex="-1">Settings</button>
     </div>
     <button type="button" class="mini" id="mini" aria-label="Jump to the result">
       <span class="mini-body" id="miniBody"></span>
@@ -571,6 +580,12 @@ button { cursor: pointer; }
                   <button type="button" class="step" data-dir="-1">−</button>
                   <label class="num" for="in-target"><span class="pre">E</span><input id="in-target" class="numin" data-key="target" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-target"></label>
                   <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <div class="quick" role="group" aria-label="Quick targets">
+                  <button type="button" class="qchip" data-set="target" data-val="0">E0</button>
+                  <button type="button" class="qchip" data-set="target" data-val="10">E10</button>
+                  <button type="button" class="qchip" data-set="target" data-val="40">E40</button>
+                  <button type="button" class="qchip" data-set="target" data-val="85">E85</button>
                 </div>
                 <p class="err" data-err="target"></p>
                 <p class="hint">Defaults to E40. Any target works.</p>
@@ -618,6 +633,12 @@ button { cursor: pointer; }
                   <button type="button" class="step" data-dir="-1">−</button>
                   <label class="num" for="in-resE"><span class="pre">E</span><input id="in-resE" class="numin" data-key="resE" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-resE"></label>
                   <button type="button" class="step" data-dir="1">+</button>
+                </div>
+                <div class="quick" role="group" aria-label="Quick ethanol contents">
+                  <button type="button" class="qchip" data-set="resE" data-val="0">E0</button>
+                  <button type="button" class="qchip" data-set="resE" data-val="10">E10</button>
+                  <button type="button" class="qchip" data-set="resE" data-val="40">E40</button>
+                  <button type="button" class="qchip" data-set="resE" data-val="85">E85</button>
                 </div>
                 <p class="err" data-err="resE"></p>
                 <p class="hint">From your flex-fuel sensor or your last blend</p>
@@ -756,6 +777,12 @@ button { cursor: pointer; }
               <label class="num" for="in-target2"><span class="pre">E</span><input id="in-target2" class="numin" data-key="target" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-labelledby="lb-target2"></label>
               <button type="button" class="step" data-dir="1">+</button>
             </div>
+            <div class="quick" role="group" aria-label="Quick targets">
+              <button type="button" class="qchip" data-set="target" data-val="0">E0</button>
+              <button type="button" class="qchip" data-set="target" data-val="10">E10</button>
+              <button type="button" class="qchip" data-set="target" data-val="40">E40</button>
+              <button type="button" class="qchip" data-set="target" data-val="85">E85</button>
+            </div>
             <p class="err" data-err="target"></p>
           </div>
         </div>
@@ -793,12 +820,13 @@ button { cursor: pointer; }
         </section>
       </div>
     </section>
-  </main>
 
-  <footer class="foot">
-    <details class="fold" id="fold-math">
-      <summary>How it's calculated</summary>
-      <div class="fold-body">
+    <!-- ================= settings ================= -->
+    <section id="view-settings" class="view" role="tabpanel" aria-labelledby="tab-settings" hidden>
+      <div class="settings">
+        <section class="group formula-card" aria-labelledby="g-formula">
+          <h2 id="g-formula">Formula</h2>
+          <div class="set-body">
         <p class="formula">E<sub>final</sub> = (E<sub>R</sub>·V<sub>R</sub> + E<sub>L</sub>·V<sub>L</sub> + E<sub>H</sub>·V<sub>H</sub>) ÷ (V<sub>R</sub> + V<sub>L</sub> + V<sub>H</sub>)</p>
         <p>R is the fuel already in the tank, L the low-ethanol fuel, H the high-ethanol fuel and T the target. E is ethanol percent by volume (E40 is 40) and V is volume.</p>
         <p class="formula"><span>Both fuels, adding A in total:</span><br>V<sub>H</sub> = [E<sub>T</sub>·(V<sub>R</sub> + A) − E<sub>R</sub>·V<sub>R</sub> − E<sub>L</sub>·A] ÷ (E<sub>H</sub> − E<sub>L</sub>), V<sub>L</sub> = A − V<sub>H</sub></p>
@@ -808,28 +836,35 @@ button { cursor: pointer; }
           <li>The math runs at full precision. Results show 2 decimals and always round toward meeting the target: high-ethanol amounts round up, low-ethanol amounts round down, and blend percentages round down.</li>
           <li>When the E85 content is uncertain, the plan uses the lowest value, so even the worst case meets the target.</li>
           <li>Volumes simply add up. The small volume change when ethanol and gasoline mix is ignored.</li>
+          <li>Results are a guide only. Trust your ethanol sensor or a test kit for the real content.</li>
         </ul>
-      </div>
-    </details>
-    <details class="fold" id="fold-phone">
-      <summary>Use it on your iPhone</summary>
-      <div class="fold-body" id="phoneHosted" hidden>
+          </div>
+        </section>
+        <section class="group" aria-labelledby="g-home">
+          <h2 id="g-home">Add to home screen</h2>
+          <div class="set-body" id="phoneHosted" hidden>
         <p>In Safari, tap Safari's Share button, then <b>Add to Home Screen</b>. It opens full screen like an app.</p>
         <p>Open it once from the home screen while you have signal. After that it works with no connection, and updates arrive by themselves when you're back online.</p>
         <p>To send it to someone, tap <b>Share</b> at the top of this page.</p>
         <p>Settings and prices stay on your device.</p>
-      </div>
-      <div class="fold-body" id="phoneElse">
+          </div>
+          <div class="set-body" id="phoneElse">
         <p>The public copy at <a href="https://dosmiao.github.io/e40-blend/" target="_blank" rel="noopener">dosmiao.github.io/e40-blend</a> can be added to your iPhone home screen and works offline. Open it in Safari, tap Share, then <b>Add to Home Screen</b>.</p>
         <p>Send that link to anyone who wants it. Settings and prices stay on each person's own device.</p>
+          </div>
+        </section>
+        <section class="group" aria-labelledby="g-reset">
+          <h2 id="g-reset">Reset data</h2>
+          <p class="desc">Clears the settings and station prices saved on this device, like clearing this site's cookies, and puts every field back to its default.</p>
+          <div class="reset-row">
+            <button type="button" class="btn-danger" id="resetBtn">Reset data</button>
+            <span class="reset-ask" id="resetAsk" hidden>Clear everything? <button type="button" class="btn-danger solid" id="resetYes">Yes, reset</button> <button type="button" class="linkbtn" id="resetNo">Cancel</button></span>
+          </div>
+        </section>
       </div>
-    </details>
-    <div class="foot-row">
-      <button type="button" class="linkbtn" id="resetBtn">Reset to defaults</button>
-      <span id="resetAsk" hidden>This clears your saved settings and prices. <button type="button" class="linkbtn danger" id="resetYes">Reset</button> <button type="button" class="linkbtn" id="resetNo">Cancel</button></span>
-    </div>
-    <p class="fine">Blends are calculated by volume and are a guide only. Trust your ethanol sensor or a test kit for the real content.</p>
-  </footer>
+    </section>
+  </main>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
@@ -957,8 +992,9 @@ const BlendCore = (() => {
   const STD_LOW = [0, 10, 15, 30];
   const NUM_KEYS = ['target', 'cap', 'resV', 'resE', 'lowE', 'highE', 'highMax', 'addAmt', 'f1Amt'];
   const VOL_KEYS = ['cap', 'resV', 'addAmt', 'f1Amt'];
+  const TABS = ['calc', 'table', 'price', 'settings'];
   const DEFAULTS = {
-    unit: 'gal', target: 40, cap: 15, resV: 3, resE: 38,
+    v: 2, unit: 'gal', target: 40, cap: 15, resV: 1, resE: 10,
     lowE: 10, lowCustom: false, highE: 85, uncertain: false, highMax: 85,
     mode: 'fill', fillKind: 'full', addAmt: 8, f1: 'low', f1Amt: 6,
     prices: {}, tab: 'calc'
@@ -979,7 +1015,9 @@ const BlendCore = (() => {
     if (s.mode === 'second') o.mode = 'second';
     if (s.fillKind === 'amount') o.fillKind = 'amount';
     if (s.f1 === 'high') o.f1 = 'high';
-    if (['calc', 'table', 'price'].includes(s.tab)) o.tab = s.tab;
+    if (TABS.includes(s.tab)) o.tab = s.tab;
+    // Saved data from before v2 still holding the old example tank (3 gal of E38) moves to the new defaults.
+    if (s.v == null && s.resV === 3 && s.resE === 38) { o.resV = DEFAULTS.resV; o.resE = DEFAULTS.resE; }
     if (s.prices && typeof s.prices === 'object') {
       for (const [k, v] of Object.entries(s.prices)) if (typeof v === 'string' && v.length <= 10) o.prices[k] = v;
     }
@@ -1023,7 +1061,7 @@ const BlendCore = (() => {
 
   // ---------- fields & validation ----------
   const FIELDS = {
-    target: { pct: true, min: 1, max: 99 },
+    target: { pct: true, min: 0, max: 99 },
     cap: { min: 1, max: 999 },
     resV: { min: 0, max: () => S.cap, maxMsg: () => `Can't be more than the tank holds (${fmtIn(S.cap)} ${unit()})` },
     resE: { pct: true, min: 0, max: 100 },
@@ -1482,6 +1520,7 @@ const BlendCore = (() => {
     press('[data-f1]', (b) => b.dataset.f1 === S.f1);
     press('[data-unit]', (b) => b.dataset.unit === S.unit);
     press('[data-frac]', (b) => S.cap > 0 && Math.abs(S.cap * Number(b.dataset.frac) - S.resV) < 0.005);
+    press('[data-set]', (b) => Math.abs(S[b.dataset.set] - Number(b.dataset.val)) < 1e-9);
     $('lowCustomWrap').hidden = !S.lowCustom;
     $('highMaxWrap').hidden = !S.uncertain;
     $('modeFill').hidden = S.mode !== 'fill';
@@ -1493,7 +1532,7 @@ const BlendCore = (() => {
     $$('[data-room]').forEach((el) => { el.textContent = `Room in tank: ${f2(room())} ${S.unit}`; });
     $('f1LowName').textContent = grade(S.lowE);
     $('f1HighName').textContent = grade(S.highE);
-    if (S.target >= 1 && S.target <= 99) $('brandE').textContent = grade(S.target);
+    if (S.target >= 0 && S.target <= 99) $('brandE').textContent = grade(S.target);
     const frac = S.cap > 0 ? Math.min(1, Math.max(0, S.resV / S.cap)) : 0;
     $('gaugeFill').style.width = (frac * 100).toFixed(1) + '%';
     $('resPct').textContent = S.cap > 0 ? `about ${Math.round(frac * 100)}% full` : '';
@@ -1516,7 +1555,7 @@ const BlendCore = (() => {
   function setTab(t, focus) {
     S.tab = t;
     app.dataset.tab = t;
-    for (const name of ['calc', 'table', 'price']) {
+    for (const name of TABS) {
       const on = name === t;
       const tab = $('tab-' + name);
       tab.setAttribute('aria-selected', String(on));
@@ -1644,6 +1683,10 @@ const BlendCore = (() => {
         priceRowsKey = '';
         update();
       }
+    } else if (d.set) {
+      S[d.set] = Number(d.val); delete raw[d.set];
+      setInputs(d.set);
+      update();
     } else if (d.frac !== undefined) {
       S.resV = r2(S.cap * Number(d.frac)); delete raw.resV;
       setInputs('resV');
@@ -1678,19 +1721,20 @@ const BlendCore = (() => {
       initInputs();
       setTab('calc', false);
       window.scrollTo(0, 0);
+      toast('Data reset to defaults');
     }
   });
 
   $('tabsList').addEventListener('keydown', (e) => {
-    const order = ['calc', 'table', 'price'];
-    let i = order.indexOf(S.tab);
-    if (e.key === 'ArrowRight') i = (i + 1) % 3;
-    else if (e.key === 'ArrowLeft') i = (i + 2) % 3;
+    const n = TABS.length;
+    let i = TABS.indexOf(S.tab);
+    if (e.key === 'ArrowRight') i = (i + 1) % n;
+    else if (e.key === 'ArrowLeft') i = (i + n - 1) % n;
     else if (e.key === 'Home') i = 0;
-    else if (e.key === 'End') i = 2;
+    else if (e.key === 'End') i = n - 1;
     else return;
     e.preventDefault();
-    setTab(order[i], true);
+    setTab(TABS[i], true);
   });
 
   const bar = $('bar');
@@ -1699,7 +1743,7 @@ const BlendCore = (() => {
 
   // ---------- boot ----------
   const hashTab = (location.hash || '').slice(1);
-  if (['calc', 'table', 'price'].includes(hashTab)) S.tab = hashTab;
+  if (TABS.includes(hashTab)) S.tab = hashTab;
   $('shareBtn').hidden = !hosted;
   $('phoneHosted').hidden = !hosted;
   $('phoneElse').hidden = hosted;
